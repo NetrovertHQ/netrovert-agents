@@ -16,7 +16,7 @@ Nothing here posts or sends on its own. The agents research, draft, and track; N
 - **Video Generation**: Generates and edits video clips for content and video bounties.
 - **Relocation Assistant**: Researches relocation options, visas, and logistics.
 - **Brainstorming / Research / Writing**: General thinking partner for ideas, research, and drafts.
-- **Copy Trading**: Monitors wallets and tokens, with a rug-risk check before anything is flagged.
+- **Copy Trading**: Monitors wallets and tokens, with a rug-risk check before anything is flagged. Playbooks: smart-money finder, wallet tracker, Fomo leaderboard wallets, X call tracker, token safety check.
 
 ## How they work together
 
@@ -38,6 +38,7 @@ Nothing here posts or sends on its own. The agents research, draft, and track; N
 | [community-pulse-weekly](playbooks/community-pulse-weekly/SKILL.md) | Weekly community report: volume, active members, who went quiet, top questions. |
 | [community-unanswered-questions](playbooks/community-unanswered-questions/SKILL.md) | Find member questions nobody answered. |
 | [daily-usage-cap](playbooks/daily-usage-cap/SKILL.md) | Pause all agents' routines for the day when the usage cap is hit. |
+| [fomo-leaderboard-wallets](playbooks/fomo-leaderboard-wallets/SKILL.md) | Pull top traders and their wallets from the Fomo (fomo.family) leaderboard, read-only, for smart-money scoring. |
 | [getting-started](playbooks/getting-started/SKILL.md) | First-run setup for the Job Seeking agent. |
 | [identify-contest-from-prize-pool](playbooks/identify-contest-from-prize-pool/SKILL.md) | Find the real contest behind a teaser that only shows a prize pool. |
 | [nft-early-project-scan](playbooks/nft-early-project-scan/SKILL.md) | Find pre-mint NFT projects on X and draft collab DMs. |
@@ -47,8 +48,11 @@ Nothing here posts or sends on its own. The agents research, draft, and track; N
 | [reply-guy-getting-started](playbooks/reply-guy-getting-started/SKILL.md) | First-run setup for the Reply Guy agent. |
 | [reply-to-lead](playbooks/reply-to-lead/SKILL.md) | Draft a reply when a pitched lead responds, sends an offer, or asks for samples. |
 | [shared-contacts](playbooks/shared-contacts/SKILL.md) | Keep one shared contacts file in sync across all agents. |
+| [smart-money-finder](playbooks/smart-money-finder/SKILL.md) | Score and rank crypto wallets worth copying by realized PnL, win rate, and copyability. |
 | [token-safety-check](playbooks/token-safety-check/SKILL.md) | PASS/WARN/KILL rug-risk check before flagging any token. |
 | [video-bounty-playbook](playbooks/video-bounty-playbook/SKILL.md) | Patterns for planning and posting video bounty entries. |
+| [wallet-tracker](playbooks/wallet-tracker/SKILL.md) | Watch crypto wallets for new buys and sells and alert with a token safety verdict. |
+| [x-call-tracker](playbooks/x-call-tracker/SKILL.md) | Track and grade token calls posted by X accounts and rank which callers are worth following. |
 
 ## How to use these playbooks
 
