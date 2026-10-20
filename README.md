@@ -49,3 +49,10 @@ Nothing here posts or sends on its own. The agents research, draft, and track; N
 | [shared-contacts](playbooks/shared-contacts/SKILL.md) | Keep one shared contacts file in sync across all agents. |
 | [token-safety-check](playbooks/token-safety-check/SKILL.md) | PASS/WARN/KILL rug-risk check before flagging any token. |
 | [video-bounty-playbook](playbooks/video-bounty-playbook/SKILL.md) | Patterns for planning and posting video bounty entries. |
+
+## How to use these playbooks
+
+- Each folder in `playbooks/` holds one `SKILL.md`. Its frontmatter has a `name` and a `description` that says when the playbook should be used.
+- Drop a folder into any agent that supports skills, and the agent can load it when the description matches the task.
+- Or skip the agent and read a playbook as a plain checklist.
+- Adapt the placeholders (for example `<outreach-folder>`) to your own files, accounts, and tools before using them.
