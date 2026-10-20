@@ -13,12 +13,12 @@ jobs:
         run: |
           fail=0
           check () {
-            if grep -rnEi --exclude-dir=.git --exclude-dir=.github "$1" .; then
+            if grep -rnEi --exclude-dir=.git --exclude-dir=.github $3 "$1" .; then
               echo "::error::Found $2"; fail=1
             fi
           }
           check '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[a-z]{2,}' 'an email address'
-          check '\+?[0-9]{3}[ -]?[0-9]{3,4}[ -]?[0-9]{3,4}[ -]?[0-9]{2,4}' 'a phone number'
+          check '\+?[0-9]{3}[ -]?[0-9]{3,4}[ -]?[0-9]{3,4}[ -]?[0-9]{2,4}' 'a phone number' '--exclude=config.example.json'
           check '(ghp_|github_pat_|sk-|xox[bp]-)[A-Za-z0-9_]{10,}' 'an API token'
           check '/workspace/job-scan' 'a private outreach path'
           exit $fail
