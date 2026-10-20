@@ -46,3 +46,7 @@ All of these numbers are in `config.json`. CLI: `python3 gate.py <token> [--chai
 - Robinhood Chain and other EVM chains: DexScreener plus a swap link for the DEX of the main pool (from DexScreener's `dexId`: uniswap, pancakeswap, aerodrome, sushiswap). With any other DEX, you get DexScreener only. The Uniswap link uses `chain=robinhood` and has not been tested on a phone. If it opens on the wrong chain, use DexScreener's own buy button.
 
 Token check runs with `--no-narrative` here, for speed.
+
+## Setup
+
+Copy config.example.json to config.json and set your own values. The example numbers are generic placeholders, not tuned settings.

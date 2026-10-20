@@ -40,3 +40,7 @@ python3 paper_trade.py backtest [--wallets "E/acc guy,Nullmask winner"] [--days 
 - `wallet_tracker scan <label> --backfill N --backfill-days D` walks public-RPC `eth_getLogs` back up to D days. The Robinhood RPC allows 30k-block ranges; the chain makes about 10 blocks/s. Swaps are built once at the end; before this, they were rebuilt after every chunk. Blockscout for Robinhood is behind Cloudflare.
 - `config.backtest_candles` sets the candle size per chain: Robinhood uses 5-minute GeckoTerminal candles. `--max-buys N` caps the run to the latest N buys.
 - A wallet sell inside the entry candle exits at the entry price (costs only), shown as `mirror_sell_same_candle`.
+
+## Setup
+
+Copy config.example.json to config.json and set your own values. The example numbers are generic placeholders, not tuned settings.

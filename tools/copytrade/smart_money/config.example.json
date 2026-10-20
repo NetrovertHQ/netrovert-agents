@@ -1,0 +1,33 @@
+{
+  "days": 10,
+  "wallet_tracker_dir": "../wallet_tracker",
+  "token_check_sample": 10,
+  "helius": {
+    "page_size": 10,
+    "max_pages_score": 100,
+    "early_buyers_pages": 10
+  },
+  "discover": {
+    "min_liquidity_usd": 10,
+    "min_price_change_h24_pct": 10,
+    "max_pair_age_days": 10,
+    "max_tokens": 10,
+    "early_buyers_per_token": 10,
+    "leaderboard_sample": 10,
+    "max_wallets_to_score": 10,
+    "pumpfun_coins": 10,
+    "pumpfun_holders_per_coin": 10,
+    "pumpfun_traders_per_coin": 10,
+    "pumpfun_trade_pages": 10
+  },
+  "bot": {
+    "max_trades_per_day": 10,
+    "min_median_hold_s": 10,
+    "sniper_s_after_pair": 100,
+    "same_slot_buys_pct": 10
+  },
+  "copyability": {
+    "good_median_hold_s": 10,
+    "max_good_trades_per_day": 10
+  }
+}

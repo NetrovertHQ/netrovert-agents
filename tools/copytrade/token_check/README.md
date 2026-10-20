@@ -73,3 +73,7 @@ The X tools run on the agent side, so grading is a documented procedure:
 6. Save `narratives/<address>.json` with `grade`, `catalyst`, `subject`, `reason`, `sources[{url,note}]`, `timeline` and `checked_at`. token_check picks it up automatically, or pass `--narrative-file`. With no file, the section shows `PENDING` plus the queries to run.
 
 Example: Dacity (`nxPqZ4F7ux8Vph5NFu25rEP6Kx9Gr1U6Fmj36Rjpump`). `narratives/<addr>.json` is the grade now: CONFIRMED by the official trailer. `narratives/archive/dacity_leak_phase.json` is the grade during the leak phase: UNCONFIRMED.
+
+## Setup
+
+Copy config.example.json to config.json and set your own values. The example numbers are generic placeholders, not tuned settings.

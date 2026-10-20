@@ -1,0 +1,38 @@
+{
+  "token_check_path": "../token_check/token_check.py",
+  "wallet_tracker_dir": "../wallet_tracker",
+  "gt_networks": {
+    "solana": "solana",
+    "ethereum": "eth",
+    "base": "base",
+    "bsc": "bsc",
+    "arbitrum": "arbitrum",
+    "robinhood": "robinhood"
+  },
+  "gt_sleep_s": 0.5,
+  "ignore_tickers": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "USDC",
+    "USDT",
+    "BNB",
+    "XRP",
+    "DOGE",
+    "HYPE",
+    "SUI",
+    "PUMP",
+    "TRUMP"
+  ],
+  "ticker_min_liquidity_usd": 10,
+  "ticker_dominance": 0.5,
+  "win": {
+    "peak_mult": 0.5,
+    "ret24_pct": 10
+  },
+  "loss": {
+    "ret24_pct": 10,
+    "kill_drawdown_pct": 10
+  },
+  "self_buy_window_h": 10
+}

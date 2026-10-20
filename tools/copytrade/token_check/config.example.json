@@ -1,0 +1,172 @@
+{
+  "_note": "Every threshold lives here. severity: kill = hard KILL on fail, warn = WARN on fail. weight = score points lost on fail (half lost when unknown). top10_holders: established pairs (age >= new_pair_hours AND liquidity >= established_min_liquidity_usd) fail above max_top10_pct as WARN; all others fail above max_top10_pct_new as KILL.",
+  "http": {
+    "timeout_s": 10,
+    "retries": 10,
+    "backoff_s": 10
+  },
+  "ticket_usd": 10,
+  "verdict": {
+    "pass_min_score": 10,
+    "unknown_is_warn": true
+  },
+  "thresholds": {
+    "max_risk_score": 10,
+    "min_lp_locked_pct": 10,
+    "max_top10_pct": 10,
+    "max_top10_pct_new": 10,
+    "new_pair_hours": 10,
+    "established_min_liquidity_usd": 10,
+    "max_dev_pct": 10,
+    "max_insiders": 10,
+    "min_liquidity_usd": 10,
+    "tiny_liquidity_usd": 10,
+    "max_ticket_share": 0.5,
+    "min_age_min": 10,
+    "max_age_hours": null,
+    "honeypot_min_buys_1h": 10,
+    "max_sell_tax_pct": 100,
+    "max_buy_tax_pct": 100,
+    "warn_tax_pct": 10,
+    "min_volume_24h_usd": 10,
+    "max_fdv_liq_ratio": 10
+  },
+  "checks": {
+    "rugged": {
+      "severity": "kill",
+      "weight": 10
+    },
+    "mint_authority": {
+      "severity": "kill",
+      "weight": 10
+    },
+    "freeze_authority": {
+      "severity": "kill",
+      "weight": 10
+    },
+    "danger_flags": {
+      "severity": "kill",
+      "weight": 10
+    },
+    "risk_score": {
+      "severity": "warn",
+      "weight": 10
+    },
+    "honeypot": {
+      "severity": "kill",
+      "weight": 10
+    },
+    "sell_tax": {
+      "severity": "kill",
+      "weight": 10
+    },
+    "buy_tax": {
+      "severity": "warn",
+      "weight": 10
+    },
+    "owner_can_mint": {
+      "severity": "kill",
+      "weight": 10
+    },
+    "proxy": {
+      "severity": "warn",
+      "weight": 100
+    },
+    "blacklist": {
+      "severity": "warn",
+      "weight": 100
+    },
+    "owner_powers": {
+      "severity": "warn",
+      "weight": 100
+    },
+    "open_source": {
+      "severity": "warn",
+      "weight": 100
+    },
+    "lp_lock": {
+      "severity": "warn",
+      "weight": 10
+    },
+    "lp_unlocked_tiny": {
+      "severity": "kill",
+      "weight": 10
+    },
+    "top10_holders": {
+      "severity": "kill",
+      "weight": 10
+    },
+    "dev_wallet": {
+      "severity": "warn",
+      "weight": 10
+    },
+    "insiders": {
+      "severity": "warn",
+      "weight": 10
+    },
+    "liquidity": {
+      "severity": "kill",
+      "weight": 10
+    },
+    "ticket_share": {
+      "severity": "warn",
+      "weight": 10
+    },
+    "pair_age": {
+      "severity": "warn",
+      "weight": 100
+    },
+    "sells_exist": {
+      "severity": "kill",
+      "weight": 10
+    },
+    "volume": {
+      "severity": "warn",
+      "weight": 10
+    },
+    "fdv_liquidity": {
+      "severity": "warn",
+      "weight": 10
+    },
+    "profile": {
+      "severity": "warn",
+      "weight": 10
+    }
+  },
+  "goplus_chain_ids": {
+    "ethereum": "1",
+    "bsc": "56",
+    "base": "8453",
+    "arbitrum": "42161",
+    "polygon": "137",
+    "optimism": "10",
+    "avalanche": "43114",
+    "fantom": "250",
+    "linea": "59144",
+    "blast": "81457",
+    "scroll": "534352",
+    "zksync": "324",
+    "mantle": "5000",
+    "cronos": "25",
+    "sonic": "146",
+    "unichain": "130",
+    "abstract": "2741",
+    "robinhood": "4663",
+    "ink": "57073"
+  },
+  "exclude_holders": {
+    "_note": "pool/locker contracts excluded from EVM top-10 (Uniswap v4 PoolManagers etc.), lowercase",
+    "all": []
+  },
+  "narrative": {
+    "dir": "narratives",
+    "score_effect": {
+      "CONFIRMED": 10,
+      "UNCONFIRMED": 10,
+      "NONE": 10,
+      "CONTRADICTED": 10,
+      "PENDING": 10
+    },
+    "_note": "narrative never KILLs; CONTRADICTED downgrades PASS to WARN"
+  }
+}

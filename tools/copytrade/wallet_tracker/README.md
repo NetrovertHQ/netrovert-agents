@@ -45,3 +45,7 @@ These explorer APIs block keyless use: Base, Arbitrum and Robinhood Blockscout (
 - Bot-flooded wallets without a Helius key: some famous KOL wallets (Cented, Cupsey) appear in thousands of failed or foreign txs per minute. Public RPC can't page past them, so backfill finds nothing, and between scans a gap of more than about 20k signatures is cut off. Scan often (every 1-2 min) or use a paid indexer (Helius) for those wallets.
 - EVM USD is quantity × the current DexScreener price, not the price at fill time.
 - For an EVM wallet that is far behind, a scan covers only the latest `evm_max_blocks_per_scan_chunks` chunks.
+
+## Setup
+
+Copy config.example.json to config.json and set your own values. The example numbers are generic placeholders, not tuned settings.

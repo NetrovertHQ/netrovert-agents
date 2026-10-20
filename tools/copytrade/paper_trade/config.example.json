@@ -1,0 +1,43 @@
+{
+  "notional_usd": 10,
+  "starting_equity_usd": 10,
+  "gate": true,
+  "stop_loss_pct": 10,
+  "take_profit_ladder": [
+    {
+      "pct": 10,
+      "sell_frac": 0.25
+    }
+  ],
+  "max_hold_hours": 10,
+  "round_trip_cost_pct": {
+    "solana": 0.5,
+    "default": 0.5
+  },
+  "mirror_wallet_sells": true,
+  "one_position_per_token_per_source": true,
+  "ingest_max_signal_age_hours": 10,
+  "ingest_xcall_sources": true,
+  "backtest_days": 10,
+  "backtest_backfill_n": 10,
+  "backtest_wallets": [],
+  "bar": {
+    "min_trades": 10,
+    "min_win_rate": 0.5,
+    "min_expectancy_r": 0.5,
+    "max_drawdown_pct": 10
+  },
+  "gecko_spacing_s": 0.5,
+  "token_check_timeout_s": 10,
+  "backtest_candles": {
+    "solana": [
+      "hour",
+      10
+    ],
+    "robinhood": [
+      "minute",
+      10
+    ]
+  },
+  "backtest_backfill_n_evm": 10
+}

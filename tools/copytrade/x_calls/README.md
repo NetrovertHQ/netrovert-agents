@@ -53,3 +53,7 @@ Each run costs 1 X call per caller, plus 1 if any user ids are missing.
 - Very new pools may have no candles yet (`ungradable`).
 - GeckoTerminal sometimes returns 429. Failed calls are retried on the next `grade`.
 - Ticker-only calls are often ambiguous on Solana, which is why the `unresolved` counts are high.
+
+## Setup
+
+Copy config.example.json to config.json and set your own values. The example numbers are generic placeholders, not tuned settings.

@@ -53,3 +53,7 @@ Results go to `results/scores.json` (one entry per wallet, latest score) and `re
 - Very active wallets hit the page cap, so they get scored on less than the full 30 days ("history truncated").
 - **Not checked yet:** funding by the token creator. Rugcheck creator vs the wallet's first funder would be the next step.
 - EVM `score` uses wallet_tracker's sources (deep on Ethereum, shallow elsewhere) with *current* DexScreener prices. EVM `discover` is not built.
+
+## Setup
+
+Copy config.example.json to config.json and set your own values. The example numbers are generic placeholders, not tuned settings.
