@@ -7,7 +7,7 @@ description: >-
 ---
 # Smart-money finder
 
-Tool: `/workspace/copytrade/smart_money/smart_money.py` (see README.md). Solana via Helius (`HELIUS_API_KEY`, never print it); candidates from tokens that ran, pump.fun, and public leaderboards.
+Tool: `tools/copytrade/smart_money/smart_money.py` (see README.md). Solana via Helius (`HELIUS_API_KEY`, never print it); candidates from tokens that ran, pump.fun, and public leaderboards.
 
 ## Steps
 1. Score a wallet: `python3 smart_money.py score <wallet> [--chain] [--label]` for 30-day realized PnL, win rate, trades/day, hold time, buy size, share of buys the token safety check kills, early-buy and bot/sniper/insider flags, and a 0-100 copyability score.

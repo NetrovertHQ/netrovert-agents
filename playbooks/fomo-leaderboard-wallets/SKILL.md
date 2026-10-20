@@ -19,6 +19,6 @@ Read-only harvesting of Fomo top traders as copy-trade candidates. Never trade, 
 1. computerUse (read only): on the Leaderboard, record top 20 for 24h, 7d, 30d and all-time: rank, handle, PnL.
 2. Dedupe handles; mark those on 2+ boards as priority.
 3. Open each priority profile (then others, cap ~40) and copy full wallet addresses with chain. Never guess or rebuild truncated addresses.
-4. Save to `/workspace/copytrade/smart_money/results/fomo_leaderboard.md`.
+4. Save to `tools/copytrade/smart_money/results/fomo_leaderboard.md`.
 5. Score wallets with the Smart-money finder skill (`smart_money.py score`), watching the data-credit budget (~50-100 credits per wallet); rank priority ones first.
 6. Report a short top list with bot/sniper flags. Promote nothing to the wallet tracker without the user's OK.

@@ -7,10 +7,10 @@ description: >-
 ---
 # Token safety check
 
-Tool lives at `/workspace/copytrade/token_check/` (see its README.md). Free sources only: DexScreener, Rugcheck (Solana), GoPlus (EVM incl. Robinhood Chain id 4663).
+Tool lives at `tools/copytrade/token_check/` (see its README.md). Free sources only: DexScreener, Rugcheck (Solana), GoPlus (EVM incl. Robinhood Chain id 4663).
 
 ## Steps
-1. Run `python /workspace/copytrade/token_check/token_check.py <address> [--chain solana|ethereum|base|bsc|arbitrum|robinhood|...] --json`. Chain auto-detects if omitted. Exit codes: 0 PASS, 1 WARN, 2 KILL, 3 error.
+1. Run `python tools/copytrade/token_check/token_check.py <address> [--chain solana|ethereum|base|bsc|arbitrum|robinhood|...] --json`. Chain auto-detects if omitted. Exit codes: 0 PASS, 1 WARN, 2 KILL, 3 error.
 2. Narrative (on by default for Solana, `--narrative` elsewhere): if the result shows PENDING, run `narrative.py` to get metadata and search queries, then search X (built-in x namespace: search_posts_all, get_posts_by_ids, search_news) and the web. Identify the catalyst, check official/verified confirmation, whether source posts are deleted, and timing vs token creation. Grade CONFIRMED / UNCONFIRMED / CONTRADICTED / NONE with source links, save to `narratives/<address>.json` per README, rerun step 1.
 3. Report: verdict, score, the failed/warned checks in plain English, narrative grade with sources. A deleted leak = UNCONFIRMED, never FAKE. Narrative never kills on its own.
 

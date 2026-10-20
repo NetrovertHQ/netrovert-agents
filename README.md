@@ -54,6 +54,19 @@ Nothing here posts or sends on its own. The agents research, draft, and track; N
 | [wallet-tracker](playbooks/wallet-tracker/SKILL.md) | Watch crypto wallets for new buys and sells and alert with a token safety verdict. |
 | [x-call-tracker](playbooks/x-call-tracker/SKILL.md) | Track and grade token calls posted by X accounts and rank which callers are worth following. |
 
+## Tools
+
+Source code for the Copy Trading bot lives in `tools/copytrade/`. Each folder has its own README.
+
+- `token_check/`: PASS/WARN/KILL rug-risk check for a token (used by the token safety check playbook).
+- `wallet_tracker/`: watches wallets on Solana and EVM chains for new buys and sells.
+- `smart_money/`: scores and discovers wallets by PnL, win rate and copyability.
+- `x_calls/`: extracts and grades token calls posted on X.
+- `paper_trade/`: paper-trades copied buys to test strategies without real money.
+- `tg_bot/`: Telegram bot that answers BUY / CAREFUL / SKIP for a token. It never holds keys or trades.
+
+Secrets come from environment variables only (see `tools/copytrade/.env.example`). Config, watchlists, state, caches and results are not in the repo. Each tool expects its own local `config.json`.
+
 ## How to use these playbooks
 
 - Each folder in `playbooks/` holds one `SKILL.md`. Its frontmatter has a `name` and a `description` that says when the playbook should be used.

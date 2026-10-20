@@ -7,7 +7,7 @@ description: >-
 ---
 # Wallet tracker
 
-Tool: `/workspace/copytrade/wallet_tracker/wallet_tracker.py` (see README.md). Solana uses Helius when `HELIUS_API_KEY` is set (never print it), else public RPC; EVM chains use free public RPC/Blockscout.
+Tool: `tools/copytrade/wallet_tracker/wallet_tracker.py` (see README.md). Solana uses Helius when `HELIUS_API_KEY` is set (never print it), else public RPC; EVM chains use free public RPC/Blockscout.
 
 ## Steps
 1. Manage the list: `python3 wallet_tracker.py add <addr> --chain <chain> --label <nickname>`, `remove <addr|label>`, `list`. A new wallet's first scan only sets a baseline; use `scan <label> --backfill N` to see its last N trades.

@@ -1,0 +1,21 @@
+# Secrets
+.env
+.env.*
+!.env.example
+# Data, state, caches, logs (personal or generated)
+*.json
+*.csv
+*.db
+*.sqlite*
+*.log
+*.pid
+*.txt
+!requirements*.txt
+state/
+cache/
+results/
+inbox/
+narratives/
+practice/
+__pycache__/
+.venv/

@@ -6,7 +6,7 @@ description: >-
 ---
 # X call tracker
 
-Tool: `/workspace/copytrade/x_calls/x_calls.py` (README.md has the full procedure). X reads are agent-side through the built-in public X tools; keep usage frugal (shared daily limit).
+Tool: `tools/copytrade/x_calls/x_calls.py` (README.md has the full procedure). X reads are agent-side through the built-in public X tools; keep usage frugal (shared daily limit).
 
 ## Steps
 1. Add callers: `python3 x_calls.py add <handle> [--wallet <addr>]`; `list` shows them.
