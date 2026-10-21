@@ -153,13 +153,55 @@ def cycle(send=None, owner=None, accounts=None, log=print):
         h = u.get("userName") or u.get("screen_name")
         st["flags"] = ([{"t": now, "handle": h, "score": sc, "strong": strong, "accounts": allaccs,
                          "followers": u.get("followers_count"), "age_d": round(age_days(u) or 0)}] + st.get("flags", []))[:50]
-        if send and owner:
+        if send:
             txt, btn = card(u, allaccs, strong, sc)
-            try: send(owner, txt, btn, None)
-            except Exception: log("follows: send error")
+            fanout(send, owner, txt, btn, log)
     st["recent"] = rec; st["last_run"] = now; st["last_stats"] = stats
     with LOCK: save_state(st)
     return stats
+
+
+# ---------------- subscribers + fan-out (no API calls per user; one shared card per flag) ----------------
+SUBS_P = os.path.join(HERE, "follows_subs.json"); SUB_LOCK = threading.Lock()
+import queue, collections
+Q = queue.Queue(maxsize=20000); SENT = collections.defaultdict(collections.deque); PER_HOUR = 6; PER_SEC = 25
+_sender = [None]
+
+
+def subs(): return gate.load(SUBS_P, {})
+
+
+def set_sub(chat, on):
+    with SUB_LOCK:
+        d = subs(); k = str(chat)
+        if on: d[k] = {"on": True, "since": time.time()}
+        else: d.pop(k, None)
+        gate.atomic_dump(d, SUBS_P)
+
+
+def is_on(chat, owner=False): return owner or str(chat) in subs()
+
+
+def _send_loop(send, log):
+    while True:
+        chat, txt, btn = Q.get()
+        try:
+            dq = SENT[chat]; now = time.time()
+            while dq and now - dq[0] > 3600: dq.popleft()
+            if len(dq) >= PER_HOUR: continue
+            dq.append(now); send(chat, txt, btn, None)
+        except Exception: log("follows: send error")
+        finally: time.sleep(1.0 / PER_SEC)
+
+
+def fanout(send, owner, txt, btn, log=print):
+    if _sender[0] is None or not _sender[0].is_alive():
+        _sender[0] = threading.Thread(target=_send_loop, args=(send, log), daemon=True, name="follows-send"); _sender[0].start()
+    chats = ([owner] if owner else []) + [int(k) if k.lstrip("-").isdigit() else k for k in subs() if str(k) != str(owner)]
+    for ch in chats:
+        try: Q.put_nowait((ch, txt, btn))
+        except queue.Full: log("follows: send queue full"); break
+    return len(chats)
 
 
 def loop(send, log):
@@ -181,8 +223,16 @@ def start(send, log):
     th = threading.Thread(target=loop, args=(send, log), daemon=True, name="follows"); th.start(); return th
 
 
-def command(args):
+def command(args, chat=None, owner=True):
     c = cfg(); args = list(args or [])
+    if args and args[0].lower() in ("on", "off"):
+        if owner: return "You always get follow alerts as the owner."
+        set_sub(chat, args[0].lower() == "on")
+        return ("✅ Follow alerts on. I'll message you when a brand-new project account follows big crypto accounts. /follows off to stop."
+                if args[0].lower() == "on" else "🔕 Follow alerts off.")
+    if not owner:
+        if args and args[0].lower() in ("add", "remove", "rm"): return "🔒 Only the owner can change which accounts are watched."
+        return public_status(chat)
     if args and args[0].lower() in ("add", "remove", "rm") and len(args) > 1:
         h = args[1].lstrip("@").strip()
         if not re.fullmatch(r"\w{1,15}", h): return "That doesn't look like an X handle."
@@ -207,4 +257,16 @@ def command(args):
     L += [f"{'🔥' if f['strong'] else '•'} @{gate.esc(f['handle'])}: {f['age_d']}d old, {f['followers']} followers, followed "
           + ", ".join("@" + gate.esc(a) for a in f["accounts"]) for f in fl] or ["None yet."]
     L += ["", "/follows add @handle · /follows remove @handle"]
+    return gate.Html("\n".join(L))
+
+
+def public_status(chat):
+    c = cfg(); s = state(); on = is_on(chat)
+    L = ["<b>Follow alerts</b>", f"You're {'subscribed ✅' if on else 'not subscribed'}. " + ("/follows off to stop." if on else "/follows on to get alerts."),
+         "I check who's newly following big crypto accounts (" + ", ".join("@" + gate.esc(a) for a in c["accounts"][:8]) + " and more) "
+         f"every {c['every_s'] // 60} min, and flag brand-new project accounts.",
+         f"Last check: {time.strftime('%Y-%m-%d %H:%M', time.localtime(s['last_run'])) if s.get('last_run') else 'not yet'}", "", "<b>Recent flags</b>"]
+    L += [f"{'🔥' if f['strong'] else '•'} @{gate.esc(f['handle'])}: {f['age_d']}d old, {f['followers']} followers, followed "
+          + ", ".join("@" + gate.esc(a) for a in f["accounts"]) for f in s.get("flags", [])[:8]] or ["None yet."]
+    L += ["", "<i>Netro Signal by Netrovert · early heads-up, not advice.</i>"]
     return gate.Html("\n".join(L))
