@@ -63,6 +63,18 @@ Built between the night of Oct 20 and the morning of Oct 21, 2026, after [@phant
 8. **UX**: reply with a number or tap $20/$50/$100/$250 to complete `/buy`, plus a health check across 9 chains.
 9. **In progress**: follow alerts for new projects followed by about 20 big ecosystem X accounts (`follows.py`, needs `TWITTERAPI_IO_KEY`; copy `follows_config.example.json` to `follows_config.json` and add the accounts).
 
+## /fumbles
+
+`/fumbles` looks at your last 40 practice sells and checks how high each token went after you sold (GeckoTerminal price history, free and keyless; falls back to the live price). It totals what holding would have paid and sends a card with your top 3 "sold too early" trades, or a clean-exits card if none went higher. Practice money only. Idea credit: [@Akcrypts](https://x.com/Akcrypts) on X.
+
+## Deploy
+
+Always-on VPS setup lives in [`../deploy/`](../deploy/). Replace `YOUR_USER` and the paths with your own.
+
+- `netro-signal.service`: systemd unit with `Restart=always`, reading secrets from an `EnvironmentFile` that stays on the server (never in the repo).
+- `netro-hbcheck.timer` + `netro-hbcheck.service` + `netro-hbcheck.sh` (install as `/usr/local/bin/netro-hbcheck`): every 60s, restart the bot if `bot.heartbeat` is older than 120s, so a frozen bot is back within about 2 minutes.
+- `backup_state.sh`: nightly backup (run it from cron) of the bot's local state into `~/backups`, keeping 7 days. Backups stay on the server.
+
 ## Setup
 
 Copy config.example.json to config.json and set your own values. The example numbers are generic placeholders, not tuned settings.
