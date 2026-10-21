@@ -1,0 +1,5 @@
+[Unit]
+Description=netro heartbeat check
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/netro-hbcheck

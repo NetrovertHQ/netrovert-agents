@@ -1,0 +1,7 @@
+[Unit]
+Description=netro heartbeat check timer
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=60s
+[Install]
+WantedBy=timers.target
