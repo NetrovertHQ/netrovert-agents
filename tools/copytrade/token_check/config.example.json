@@ -29,7 +29,8 @@
     "max_buy_tax_pct": 100,
     "warn_tax_pct": 10,
     "min_volume_24h_usd": 10,
-    "max_fdv_liq_ratio": 10
+    "max_fdv_liq_ratio": 10,
+    "max_round_trip_loss_pct": 10
   },
   "checks": {
     "rugged": {
@@ -151,8 +152,7 @@
     "sonic": "146",
     "unichain": "130",
     "abstract": "2741",
-    "robinhood": "4663",
-    "ink": "57073"
+    "robinhood": "4663"
   },
   "exclude_holders": {
     "_note": "pool/locker contracts excluded from EVM top-10 (Uniswap v4 PoolManagers etc.), lowercase",
@@ -168,5 +168,40 @@
       "PENDING": 10
     },
     "_note": "narrative never KILLs; CONTRADICTED downgrades PASS to WARN"
+  },
+  "onchain": {
+    "_note": "Own on-chain checks where GoPlus has no data (GoPlus returns 'main chain is not supported' for 999 and 57073 as of 2026-10-20). Keyless sources only.",
+    "hyperevm": {
+      "chain_id": 999,
+      "wrapped_native": "0x5555555555555555555555555555555555555555",
+      "rpcs": [
+        "https://rpc.hyperliquid.xyz/evm",
+        "https://rpc.purroofgroup.com",
+        "https://999.rpc.thirdweb.com"
+      ],
+      "archive_rpcs": [
+        "https://rpc.purroofgroup.com"
+      ],
+      "logs_rpcs": [
+        "https://rpc.purroofgroup.com"
+      ],
+      "logs_max_range": 10,
+      "max_log_chunks": 10,
+      "lp_lockers": [],
+      "exclude_holders": []
+    },
+    "ink": {
+      "chain_id": 57073,
+      "wrapped_native": "0x4200000000000000000000000000000000000006",
+      "rpcs": [
+        "https://rpc-gel.inkonchain.com",
+        "https://rpc-qnd.inkonchain.com"
+      ],
+      "blockscout": "https://explorer.inkonchain.com",
+      "logs_max_range": 10,
+      "max_log_chunks": 10,
+      "lp_lockers": [],
+      "exclude_holders": []
+    }
   }
 }

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Multi-chain token safety checker (rug filter). Free, no-key sources only:
-DexScreener (all chains), Rugcheck (Solana), GoPlus (EVM).
+DexScreener (all chains), Rugcheck (Solana), GoPlus (EVM),
+own on-chain checks via public RPC/Sourcify/Blockscout for chains GoPlus lacks (HyperEVM, Ink): see onchain.py.
 Usage: python token_check.py <address> [--chain CHAIN] [--json] [--config PATH]
 Exit code: 0 PASS, 1 WARN, 2 KILL, 3 error."""
 import argparse, json, os, re, sys, time
@@ -185,12 +186,33 @@ def run(addr, chain, cfg):
         except SourceError as e:
             sources["rugcheck"] = f"failed: {e}"
     else:
-        try:
-            sec = goplus(chain, addr, cfg); sources["goplus"] = "ok" + (" (partial)" if sec.pop("_partial", False) else "")
-        except SourceError as e:
-            sources["goplus"] = f"failed: {e}"
+        if cfg["goplus_chain_ids"].get(chain):
+            try:
+                sec = goplus(chain, addr, cfg); sources["goplus"] = "ok" + (" (partial)" if sec.pop("_partial", False) else "")
+                try:  # Etherscan v2: verified source + contract name; fills GoPlus gaps (key from env, optional)
+                    import etherscan
+                    es = etherscan.source(chain, addr)
+                    if es is not None:
+                        sources["etherscan"] = ("verified: " + (es.get("name") or "?")) if es["verified"] else "not verified"
+                        sec["contract_name"] = es.get("name") if es["verified"] else None
+                        if sec.get("open_source") is None: sec["open_source"] = es["verified"]
+                        if sec.get("proxy") is None: sec["proxy"] = es["proxy"]
+                except Exception: pass
+            except SourceError as e:
+                sources["goplus"] = f"failed: {e}"
+        if not sec and chain in (cfg.get("onchain") or {}):
+            try:
+                import onchain
+                pairs = []
+                try: pairs = dexscreener_pairs(chain, addr, cfg)
+                except SourceError: pass
+                sec = onchain.security(chain, addr, pairs, cfg)
+                sources.update({f"onchain.{k}": v for k, v in sec.pop("_sources", {}).items()}); sources["onchain"] = "ok"
+                if not sec.get("symbol"): sec["symbol"] = (m or {}).get("symbol")
+            except Exception as e:  # noqa: any failure here just means unknown, never pass
+                sources["onchain"] = f"failed: {type(e).__name__}: {str(e)[:120]}"; sec = None
     U = lambda src: f"{src} unavailable"
-    secname = "Rugcheck" if chain == "solana" else "GoPlus"
+    secname = "Rugcheck" if chain == "solana" else ("on-chain checks" if sources.get("onchain") else "GoPlus")
 
     if chain == "solana":
         if not sec:
@@ -215,7 +237,7 @@ def run(addr, chain, cfg):
         else:
             hp = sec["honeypot"]; csa = sec["cannot_sell_all"]
             add("honeypot", "unknown" if hp is None else ("fail" if hp or csa or sec["cannot_buy"] else "pass"),
-                "GoPlus gave no honeypot result" if hp is None else
+                f"{secname}: no honeypot result" if hp is None else
                 ("honeypot / cannot sell flagged" if hp or csa else ("cannot buy" if sec["cannot_buy"] else "buy and sell simulate OK")))
             for nm, key, lim in (("sell_tax", "sell_tax", T["max_sell_tax_pct"]), ("buy_tax", "buy_tax", T["max_buy_tax_pct"])):
                 v = sec[key]
@@ -234,7 +256,7 @@ def run(addr, chain, cfg):
                 "blacklist not reported" if sec["blacklist"] is None else
                 ("contract has a blacklist function" if sec["blacklist"] else "no blacklist"))
             pw = sec["owner_powers"]
-            if sec["owner_renounced"] is None and not pw:
+            if (sec["owner_renounced"] is None or sec.get("owner_powers_unknown") and not sec["owner_renounced"]) and not pw:
                 add("owner_powers", "unknown", "owner not reported")
             else: add("owner_powers", "fail" if pw and not sec["owner_renounced"] else "pass",
                 ("owner powers: " + ", ".join(pw)) if pw and not sec["owner_renounced"] else
