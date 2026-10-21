@@ -1,0 +1,11 @@
+{
+  "every_s": 10,
+  "page_size": 10,
+  "cap_usd": 0.5,
+  "call_gap_s": 10,
+  "max_age_days": 10,
+  "max_followers": 10,
+  "min_score": 10,
+  "strong_min_accounts": 10,
+  "accounts": []
+}
