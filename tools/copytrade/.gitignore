@@ -27,3 +27,4 @@ __pycache__/
 *.heartbeat
 *.bin-runtime
 samples/
+tg_bot/assets/cry.png

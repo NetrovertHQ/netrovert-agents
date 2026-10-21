@@ -61,7 +61,8 @@ def need(cid):
 
 def start(cid, name=""):
     u = get(cid)
-    if u: return f"🎮 You're already set up with {money(u['cash'])} in fake cash. /portfolio shows your bag, /reset starts over."
+    if u: return (f"🎮 You're already set up with {money(u['cash'])} in fake cash. /portfolio shows your bag, /fumbles shows what you sold too early, /reset starts over.",
+                  None, [("😭 Fumbled trades", "pf:")])
     c = gate.cfg(); u = {"chat_id": cid, "name": name, "start": c.get("practice_start_usd", 1000), "cash": c.get("practice_start_usd", 1000),
                          "positions": {}, "history": [], "stoploss_pct": None, "copy": None, "copygate": True, "pending": {}, "created": now()}
     put(u); return INTRO + "\n\nTry it: /buy <token address> 50"
@@ -447,3 +448,54 @@ def snipe(cid, token, chain):
     note = {"BUY": "🟢 It looked clean when we flagged it.", "CAREFUL": "🟡 We flagged it as careful, so keep it small."}.get(v.get("verdict"), "")
     return gate.Html(f"✅ Sniped {money(50)} of ${gate.esc(q[1])} at {px_fmt(q[0]*(1+fee()))} (fee included).\n"
                      f"💵 Fake cash left: {money(u['cash'])}" + (f"\n{note}" if note else "") + "\n\n<i>🎮 Practice mode · fake money only</i>")
+
+
+# ---- Fumbled trades: how much more a closed trade would have made if held to the peak after the sale ----
+OHLCV = cache.TTL(900, miss_ttl=120)
+GT_NET = {"solana": "solana", "ethereum": "eth", "bsc": "bsc", "base": "base", "arbitrum": "arbitrum", "polygon": "polygon_pos", "avalanche": "avax"}
+
+
+def _pool(token, chain):
+    ps = cache.PAIRS.get(token.lower(), lambda: _pairs(token)) or []
+    ps = [p for p in ps if p["baseToken"]["address"].lower() == token.lower() and (not chain or p["chainId"] == chain)]
+    return max(ps, key=lambda p: (p.get("liquidity") or {}).get("usd") or 0) if ps else None
+
+
+def _candles(net, pool, tf, agg):
+    def f():
+        try:
+            r = S.get(f"https://api.geckoterminal.com/api/v2/networks/{net}/pools/{pool}/ohlcv/{tf}", params={"aggregate": agg, "limit": 1000}, timeout=15)
+            return r.json()["data"]["attributes"]["ohlcv_list"] if r.ok else None
+        except Exception: return None
+    return OHLCV.get((net, pool, tf, agg), f)
+
+
+def peak_after(token, chain, ts):
+    """(peak_usd, source) for the highest price since ts. GeckoTerminal OHLCV (free, keyless); falls back to the live price."""
+    p = _pool(token, chain); net = GT_NET.get((p or {}).get("chainId") or chain or "")
+    if p and net and ts:
+        age = time.time() - ts
+        tf, agg, step = ("minute", 15, 900) if age < 9 * 86400 else ("hour", 1, 3600) if age < 40 * 86400 else ("day", 1, 86400)
+        cs = _candles(net, p["pairAddress"], tf, agg)
+        if cs:
+            hs = [c[2] for c in cs if c[0] + step > ts and c[2]]
+            if hs: return max(hs), "peak"
+    q = price(token, chain)
+    return (q[0], "now") if q else (None, None)
+
+
+def fumbles(cid, top=3):
+    u = get(cid)
+    if not u: return None
+    sells = [x for x in u["history"] if x["side"] == "SELL" and x.get("px") and x.get("usd")][-40:]
+    pairs = {(x["token"], x.get("chain")) for x in sells}; warm(list(pairs))
+    out = []
+    for x in sells:
+        ts = x.get("ts") or _ts_from(x["t"]); pk, src = peak_after(x["token"], x.get("chain"), ts)
+        if not pk: continue
+        exit_raw = x["px"] / (1 - fee()); qty = x["usd"] / x["px"]
+        missed = qty * pk * (1 - fee()) - x["usd"]
+        if missed > 0.01 and pk > exit_raw:
+            out.append({"symbol": x["symbol"], "sold": exit_raw, "peak": pk, "missed": missed, "x": pk / exit_raw, "src": src, "when": x["t"]})
+    out.sort(key=lambda f: -f["missed"])
+    return {"name": u.get("name"), "total": sum(f["missed"] for f in out), "count": len(out), "checked": len(sells), "top": out[:top]}

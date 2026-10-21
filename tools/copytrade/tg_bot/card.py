@@ -8,7 +8,7 @@ TXT, MUTED, ACCENT = (236, 239, 244), (139, 148, 165), (255, 140, 66)
 UP, DOWN, WARN = (34, 214, 128), (255, 84, 102), (255, 196, 61)
 INTER = "/usr/share/fonts/truetype/sand-box/google/Inter/Inter-VariableFont_opsz,wght.ttf"
 ASSETS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
-MOODS = {"up": "band.png", "down": "sass.png", "flat": "sleep.png"}  # Gojo the fox; flat = within +/-2%
+MOODS = {"up": "band.png", "down": "sass.png", "flat": "sleep.png", "cry": "cry.png"}  # Gojo the fox; flat = within +/-2%
 FLAT_PCT = 2.0
 import threading
 RENDER = threading.BoundedSemaphore(3)  # Pillow is CPU-heavy: at most 3 cards render at once
@@ -60,7 +60,7 @@ def mood(pct): return "flat" if abs(pct) <= FLAT_PCT else "up" if pct > 0 else "
 
 def _gojo(im, pct):
     """Gojo large on the right, standing on the footer line, with a soft glow in the mood colour."""
-    m = mood(pct); col = {"up": UP, "down": DOWN, "flat": MUTED}[m]
+    m = pct if isinstance(pct, str) else mood(pct); col = {"up": UP, "down": DOWN, "flat": MUTED, "cry": ACCENT}[m]
     try: g = Image.open(os.path.join(ASSETS, MOODS[m])).convert("RGBA")
     except Exception: return
     g = g.crop(g.getbbox()); bw, bh = 430, 470
@@ -136,4 +136,39 @@ def _portfolio_card(p, out=None):
     _stat(d, 302, 452, "Wins / losses", f"{p['wins']} / {p['losses']}", 170)
     _stat(d, 484, 452, "Best trade", best, 240)
     if p.get("open_count"): d.text((60, 562), f"{p['open_count']} open, valued at live prices", font=font(20), fill=MUTED)
+    return _save(im, out)
+
+
+def fumble_card(f, out=None):
+    with RENDER: return _fumble_card(f, out)
+
+
+def _fumble_card(f, out=None):
+    """f: name, total, count, top=[{symbol, sold, peak, missed, x}]"""
+    im, d = _base()
+    d.text((60, 122), "Fumbled trades", font=font(44, "Bold"), fill=TXT)
+    n = f["count"]
+    d.text((60, 178), f"Sold too early {n} time{'s' if n != 1 else ''}. Here's what holding would have paid.", font=font(22), fill=MUTED)
+    _gojo(im, "cry" if f["top"] else "up"); d = ImageDraw.Draw(im)
+    if not f["top"]:
+        d.text((60, 270), "No fumbles!", font=font(96, "ExtraBold"), fill=UP)
+        d.text((60, 400), "Nothing you sold went higher after.", font=font(30), fill=TXT)
+        return _save(im, out)
+    head = f"-${f['total']:,.2f}"; size = 96
+    while size > 52 and d.textlength(head, font=font(size, "ExtraBold")) > 620: size -= 4
+    d.text((60, 214 + (96 - size) // 2), head, font=font(size, "ExtraBold"), fill=DOWN)
+    d.text((60 + d.textlength(head, font=font(size, "ExtraBold")) + 16, 260), "fumbled", font=font(34, "Bold"), fill=ACCENT)
+    y = 340
+    for c, x in ((60, "TOKEN"), (230, "SOLD AT"), (400, "PEAK AFTER"), (580, "MISSED")):
+        d.text((c + 18, y), x, font=font(15, "SemiBold"), fill=MUTED)
+    for i, r in enumerate(f["top"][:3]):
+        ry = y + 28 + i * 80
+        d.rounded_rectangle([60, ry, 740, ry + 68], 12, fill=PANEL)
+        sym = "$" + r["symbol"]; fs = 26
+        while fs > 16 and d.textlength(sym, font=font(fs, "Bold")) > 150: fs -= 2
+        d.text((78, ry + 20 + (26 - fs) // 2), sym, font=font(fs, "Bold"), fill=TXT)
+        d.text((248, ry + 22), px_fmt(r["sold"]), font=font(22), fill=MUTED)
+        d.text((418, ry + 22), px_fmt(r["peak"]), font=font(22), fill=TXT)
+        d.text((598, ry + 10), f"-${r['missed']:,.2f}", font=font(22, "Bold"), fill=DOWN)
+        d.text((598, ry + 38), f"{r['x']:.1f}x higher", font=font(16), fill=ACCENT)
     return _save(im, out)

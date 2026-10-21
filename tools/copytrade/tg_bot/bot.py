@@ -25,17 +25,17 @@ OWNER_CMDS = [
     ("calls", "📊 How X callers' picks did", False), ("paper", "📝 Results of our fake test trades", False),
     ("papertrade", "🧪 Start a fake $100 test trade", True), ("fomo", "🏁 Fomo leaderboard summary", False),
     ("loss", "🩹 Log a real loss today (reminder only)", False), ("settings", "⚙️ Your limits and sizes", False),
-    ("publicname", "🏷 Rename a wallet for practice users: /publicname nickname new label", False),
-    ("follows", "🐦 New project accounts following big X names", False)]
+    ("publicname", "🏷 Rename a wallet for practice users: /publicname nickname new label", False)]
 PUBLIC_CMDS = [
     ("practice", "🎮 Get $1,000 of fake money to practice", False), ("buy", "🛒 Fake buy: /buy token amount", True),
     ("sell", "💸 Fake sell: /sell token [percent]", True), ("portfolio", "💼 Your practice portfolio", True),
-    ("history", "📜 Your practice trades", False), ("pnl", "🧾 Your practice PnL card", True), ("reset", "🔄 Start practice over", False),
+    ("history", "📜 Your practice trades", False), ("pnl", "🧾 Your practice PnL card", True), ("fumbles", "😭 Trades you sold too early", True), ("reset", "🔄 Start practice over", False),
     ("stoploss", "🛑 Auto-sell if down X%", False), ("copy", "🤖 Auto-copy a wallet with fake money", False),
     ("uncopy", "✋ Stop copying", False), ("copygate", "🛡 Skip risky tokens when copying", False),
     ("limit", "🎯 Practice limit buy: /limit token amount -20%", True), ("dca", "🧩 Practice buy in pieces: /dca token total pieces every", True),
     ("orders", "📋 Your practice orders", False), ("cancel", "✖️ Cancel a practice order", False),
     ("launches", "🚀 Alerts for new tokens that pass our check", False),
+    ("follows", "🐦 Get alerts when new projects follow big crypto accounts", False),
     ("leaderboard", "🏆 Top practice players", False), ("help", "❓ What Netro Signal can do", False)]
 LONG = {c for c, _, l in OWNER_CMDS + PUBLIC_CMDS if l}
 RATE = defaultdict(deque); BUSY = {}
@@ -44,7 +44,7 @@ RATE = defaultdict(deque); BUSY = {}
 #   HEAVY: commands that run a full safety check or scoring (20-60s). At most one heavy job per user at a time.
 FAST = ThreadPoolExecutor(max_workers=16, thread_name_prefix="fast"); HEAVY = ThreadPoolExecutor(max_workers=6, thread_name_prefix="heavy")
 POOL = FAST  # old name, kept for anything else that imports it
-HEAVY_CMDS = {"check", "safety", "score", "scan", "papertrade", "buy", "smartmoney", "fomo", "calls", "callers", "paper", "report"}
+HEAVY_CMDS = {"fumbles", "check", "safety", "score", "scan", "papertrade", "buy", "smartmoney", "fomo", "calls", "callers", "paper", "report"}
 HEAVY_RUNNING = set(); HEAVY_LOCK = threading.Lock()
 
 
@@ -65,13 +65,39 @@ class TG:
         if not hasattr(self._tl, "s"): self._tl.s = requests.Session()
         return self._tl.s
 
+    RETRY = {"sendMessage", "editMessageText", "sendPhoto", "answerCallbackQuery"}
+    BACKOFF = (1, 3, 6)
+
+    def _retrying(self, method, do):
+        """do() -> requests.Response. Retries blips (connection/timeout/SSL, 5xx, 429) for outgoing calls up to 3 times
+        on a fresh connection; other 4xx are final. A ReadTimeout retry can double-send if the first one landed (accepted)."""
+        tries = len(self.BACKOFF) + 1 if method in self.RETRY else 1
+        why = None
+        for i in range(tries):
+            if i:
+                self._tl.s = requests.Session()  # fresh connection after a blip
+            try:
+                r = do()
+                if r.status_code == 429 or r.status_code >= 500:
+                    why = f"HTTP {r.status_code}"
+                    if i + 1 < tries:
+                        try: ra = float((r.json().get("parameters") or {}).get("retry_after") or 0)
+                        except Exception: ra = 0
+                        time.sleep(min(max(ra, self.BACKOFF[i]), 30)); continue
+                d = r.json()
+                if i and d.get("ok"): log(f"telegram {method} retried ok ({why})")
+                if not d.get("ok"): log(f"telegram {method} error: {d.get('error_code')} {d.get('description')}")
+                return d
+            except (requests.ConnectionError, requests.Timeout) as e:  # SSLError is a ConnectionError
+                why = type(e).__name__
+                if i + 1 < tries: time.sleep(self.BACKOFF[i]); continue
+            except Exception as e:
+                why = type(e).__name__; break
+        log(f"telegram {method} " + ("gave up" if tries > 1 else "failed") + f": {why}")  # never log the URL: it holds the token
+        return {}
+
     def call(self, method, p=None, timeout=30):
-        try:
-            d = self.s.post(self.base + method, json=p or {}, timeout=timeout).json()
-            if not d.get("ok"): log(f"telegram {method} error: {d.get('error_code')} {d.get('description')}")
-            return d
-        except Exception as e:  # never log the URL: it holds the token
-            log(f"telegram {method} failed: {type(e).__name__}"); return {}
+        return self._retrying(method, lambda: self.s.post(self.base + method, json=p or {}, timeout=timeout))
 
     def send(self, chat, text, btns=None, cb=None):
         if not isinstance(text, gate.Html): text = gate.esc(text)
@@ -97,13 +123,10 @@ class TG:
         if not isinstance(caption, gate.Html): caption = gate.esc(caption)
         p = {"chat_id": chat, "caption": caption[:1024], "parse_mode": "HTML"}
         if cb: p["reply_markup"] = json.dumps({"inline_keyboard": [[{"text": t, "callback_data": d} for t, d in cb]]})
-        try:
+        def do():
             with open(path, "rb") as f:
-                d = requests.post(self.base + "sendPhoto", data=p, files={"photo": ("pnl.png", f, "image/png")}, timeout=timeout).json()
-            if not d.get("ok"): log(f"telegram sendPhoto error: {d.get('error_code')} {d.get('description')}")
-            return d
-        except Exception as e:  # never log the URL: it holds the token
-            log(f"telegram sendPhoto failed: {type(e).__name__}"); return {}
+                return requests.post(self.base + "sendPhoto", data=p, files={"photo": ("pnl.png", f, "image/png")}, timeout=timeout)
+        return self._retrying("sendPhoto", do)
 
     def out(self, chat, t, b=None, cb=None):
         """Send one dispatch item: text, or a Photo."""
@@ -182,16 +205,16 @@ def dispatch(cmd, args, chat, name, is_owner):
     pub = {"practice": lambda: P.start(chat, name), "buy": lambda: P.buy_request(chat, args), "sell": lambda: P.sell(chat, args),
            "portfolio": lambda: P.portfolio(chat), "history": lambda: P.history(chat), "reset": lambda: P.reset(chat, name),
            "stoploss": lambda: P.stoploss(chat, args), "copy": lambda: P.copy(chat, args), "uncopy": lambda: P.uncopy(chat),
-           "copygate": lambda: P.copygate(chat, args), "leaderboard": lambda: P.leaderboard(chat), "pnl": lambda: pnl(chat, args),
+           "copygate": lambda: P.copygate(chat, args), "leaderboard": lambda: P.leaderboard(chat), "pnl": lambda: pnl(chat, args), "fumbles": lambda: fumbles(chat),
            "limit": lambda: orders.limit(chat, args), "dca": lambda: orders.dca(chat, args), "orders": lambda: orders.list_orders(chat),
-           "cancel": lambda: orders.cancel(chat, args), "launches": lambda: launches.command(chat, args),
+           "cancel": lambda: orders.cancel(chat, args), "launches": lambda: launches.command(chat, args), "follows": lambda: follows.command(args, chat, is_owner),
            "help": lambda: help_text(is_owner), "start": lambda: welcome(is_owner, name)}
     own = {"stats": lambda: (owner_stats(), None), "check": lambda: tools.check(args), "safety": lambda: tools.safety(args), "watch": lambda: tools.watch(args),
            "unwatch": lambda: tools.unwatch(args), "wallets": lambda: tools.wallets(), "score": lambda: tools.score(args),
            "smartmoney": lambda: tools.smartmoney(), "callers": lambda: tools.callers(), "addcaller": lambda: tools.addcaller(args),
            "calls": lambda: tools.calls(), "paper": lambda: tools.paper(args), "papertrade": lambda: tools.papertrade(args),
            "fomo": lambda: tools.fomo(), "settings": lambda: tools.settings(), "report": lambda: tools.paper([]),
-           "loss": lambda: loss(args), "publicname": lambda: publicname(args), "follows": lambda: follows.command(args)}
+           "loss": lambda: loss(args), "publicname": lambda: publicname(args)}
     if cmd == "scan" and is_owner:
         txt, _, f = tools.scan(args)
         out = [(txt, None, None)]
@@ -219,6 +242,20 @@ def pnl(chat, args):
     return [(Photo(card.trade_card(d), trade_caption(d)), None, None)]
 
 
+def fumbles(chat):
+    f = practice.fumbles(chat)
+    if not f: return "🎮 Send /practice first to get your fake $1,000."
+    if not f["checked"]: return "No closed trades yet, so nothing to fumble. Sell something and check back 😄"
+    if not f["top"]:
+        return [(Photo(card.fumble_card(f), f"✅ Checked your last {f['checked']} sells. None of them went higher after you got out. Clean exits!"), None, None)]
+    lines = [f"😭 You left {practice.money(f['total'])} on the table across {f['count']} trade{'s' if f['count'] != 1 else ''}."]
+    for r in f["top"]:
+        lines.append(f"${r['symbol']}: sold at {practice.px_fmt(r['sold'])}, it went to {practice.px_fmt(r['peak'])}" + (" (price now)" if r["src"] == "now" else "")
+                     + f". That's {practice.money(r['missed'])} missed.")
+    lines.append("Practice mode, fake money. Peaks are the highest price since you sold.")
+    return [(Photo(card.fumble_card(f), "\n".join(lines)[:1000]), None, None)]
+
+
 def trade_caption(d):
     return (f"🧾 ${d['symbol']}: {'+' if d['pl'] >= 0 else ''}{practice.money(d['pl'])} ({d['pct']:+.1f}%)"
             + (" so far" if d["open"] else "") + ". Practice trade on Netro Signal, fake money.")
@@ -233,7 +270,7 @@ def publicname(args):
     for i in range(len(args) - 1, 0, -1):
         w = gate.find_wallet(" ".join(args[:i]))
         if w: break
-    else: return "🤔 I couldn't match a wallet nickname. Usage: /publicname IFwhale Robinhood whale #1"
+    else: return "🤔 I couldn't match a wallet nickname. Usage: /publicname <nickname> <public label>hood whale #1"
     if gate.is_test(w["label"]): return "Test wallets aren't shown to practice users."
     new = " ".join(args[i:]).strip()[:40]
     if any(nk.lower() in new.lower() for nk in nick.values() if len(nk) > 2): return "That label has a private nickname in it. Pick something else."
@@ -324,7 +361,7 @@ def handle_callback(tg, cq):
         if not pend or pend["exp"] < time.time():
             PENDING.pop(chat, None); FAST.submit(tg.send, chat, "⌛ That one expired. Send the command again."); return
         return handle_message(tg, {"chat": {"id": chat, "type": "private"}, "from": cq.get("from"), "text": data[3:]})
-    if not chat or not data[:3] in ("pb:", "px:", "pc:", "ls:"): return
+    if not chat or not data[:3] in ("pb:", "px:", "pc:", "ls:", "pf:"): return
     if chat != gate.cfg().get("owner_chat_id") and limited(chat): return
     def job():
         BUSY[id(job)] = time.time()
@@ -334,12 +371,14 @@ def handle_callback(tg, cq):
                 mid = (tg.send(chat, "⏳ Buying…") or {}).get("result", {}).get("message_id")
                 r = practice.snipe(chat, tok, launches.SHORT.get(ch, ch))  # no re-check: verdict came from the launch scan
                 tg.edit(chat, mid, r) if mid else tg.send(chat, r)
+            elif data.startswith("pf:"):
+                for t, bb, cb in (lambda r: [(r, None, None)] if isinstance(r, str) else r)(fumbles(chat)): tg.out(chat, t, bb, cb)
             elif data.startswith("pc:"):
                 for t, b, cb in (lambda r: [(r, None, None)] if isinstance(r, str) else r)(pnl(chat, [data[3:]])): tg.out(chat, t, b, cb)
             else: tg.send(chat, practice.confirm(chat, data))
         except Exception: log("callback error: " + traceback.format_exc().strip().splitlines()[-1])
         finally: BUSY.pop(id(job), None)
-    FAST.submit(job)
+    (HEAVY if data.startswith("pf:") else FAST).submit(job)
 
 
 HERE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -401,7 +440,7 @@ def run():
     # or block polling. Every send goes through TG.call (30s timeout, errors logged).
     launches.start(lambda ch, t, btn, cb: tg.send(ch, t, btn, cb), log)
     orders.start(lambda ch, t, cb=None: tg.send(ch, gate.Html(gate.esc(t) + "\n\n<i>🎮 Practice mode · fake money only</i>"), None, cb), log)
-    follows.start(lambda ch, t, btn, cb: tg.send(ch, t, btn, cb), log)  # owner-only follow alerts, own thread, starts ~200s in
+    follows.start(lambda ch, t, btn, cb: tg.send(ch, t, btn, cb), log)  # follow alerts (owner + opted-in users), own thread, starts ~200s in
     while True:
         try:
             LAST_POLL[0] = time.time()
