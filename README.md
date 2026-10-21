@@ -16,7 +16,7 @@ Nothing here posts or sends on its own. The agents research, draft, and track; N
 - **Video Generation**: Generates and edits video clips for content and video bounties.
 - **Relocation Assistant**: Researches relocation options, visas, and logistics.
 - **Brainstorming / Research / Writing**: General thinking partner for ideas, research, and drafts.
-- **Copy Trading**: Monitors wallets and tokens, with a rug-risk check before anything is flagged. Playbooks: smart-money finder, wallet tracker, Fomo leaderboard wallets, X call tracker, token safety check.
+- **Copy Trading**: Monitors wallets and tokens, with a rug-risk check before anything is flagged. Playbooks: getting started, smart-money finder, wallet tracker, Fomo leaderboard wallets, X call tracker, token safety check, paper-trade auditor, Netro Signal trade gate bot.
 
 ## How they work together
 
@@ -30,6 +30,7 @@ Nothing here posts or sends on its own. The agents research, draft, and track; N
 | Playbook | Purpose |
 |---|---|
 | [ats-check-before-applying](playbooks/ats-check-before-applying/SKILL.md) | Check a CV/application against the company's applicant tracking system before submitting. |
+| [bot-uptime-and-health-check](playbooks/bot-uptime-and-health-check/SKILL.md) | Keep a long-running bot alive: freeze-proofing, outside supervisor, and a full feature health check. |
 | [bounty-hackathon-breakdown](playbooks/bounty-hackathon-breakdown/SKILL.md) | Standard card for any bounty or hackathon: rules, prizes, route to winning, sponsor risk. |
 | [bounty-hunter-getting-started](playbooks/bounty-hunter-getting-started/SKILL.md) | First-run setup for the Bounties and Hackathons agent. |
 | [cold-dm-sweet-spot](playbooks/cold-dm-sweet-spot/SKILL.md) | Rules for short, human cold DMs with the ask up front. |
@@ -37,13 +38,17 @@ Nothing here posts or sends on its own. The agents research, draft, and track; N
 | [community-pulse-getting-started](playbooks/community-pulse-getting-started/SKILL.md) | Connect Discord, Telegram, and X group chats to Community Pulse. |
 | [community-pulse-weekly](playbooks/community-pulse-weekly/SKILL.md) | Weekly community report: volume, active members, who went quiet, top questions. |
 | [community-unanswered-questions](playbooks/community-unanswered-questions/SKILL.md) | Find member questions nobody answered. |
+| [copy-trading-getting-started](playbooks/copy-trading-getting-started/SKILL.md) | First-run setup for the Copy Trading agent. |
 | [daily-usage-cap](playbooks/daily-usage-cap/SKILL.md) | Pause all agents' routines for the day when the usage cap is hit. |
 | [fomo-leaderboard-wallets](playbooks/fomo-leaderboard-wallets/SKILL.md) | Pull top traders and their wallets from the Fomo (fomo.family) leaderboard, read-only, for smart-money scoring. |
+| [founder-questions-lead-mining](playbooks/founder-questions-lead-mining/SKILL.md) | Mine questions people ask recently funded founders on X for content ideas and cold DMs (method by @thatGTMdude). |
 | [getting-started](playbooks/getting-started/SKILL.md) | First-run setup for the Job Seeking agent. |
 | [identify-contest-from-prize-pool](playbooks/identify-contest-from-prize-pool/SKILL.md) | Find the real contest behind a teaser that only shows a prize pool. |
+| [netro-signal-trade-gate-bot](playbooks/netro-signal-trade-gate-bot/SKILL.md) | Run, fix or extend the Netro Signal Telegram trade-gate bot (verdict cards, owner tools, practice mode). |
 | [nft-early-project-scan](playbooks/nft-early-project-scan/SKILL.md) | Find pre-mint NFT projects on X and draft collab DMs. |
 | [nft-sweep-watch](playbooks/nft-sweep-watch/SKILL.md) | Detect whale sweeps on established NFT collections. |
 | [nft-tracker-getting-started](playbooks/nft-tracker-getting-started/SKILL.md) | First-run setup for the NFT Tracker agent. |
+| [paper-trade-auditor](playbooks/paper-trade-auditor/SKILL.md) | Fake-trade a wallet or X caller on real prices before risking real money, with a pass/fail verdict. |
 | [pitch-funded-project](playbooks/pitch-funded-project/SKILL.md) | Pitch a freshly funded project for a paid content or community role. |
 | [reply-guy-getting-started](playbooks/reply-guy-getting-started/SKILL.md) | First-run setup for the Reply Guy agent. |
 | [reply-to-lead](playbooks/reply-to-lead/SKILL.md) | Draft a reply when a pitched lead responds, sends an offer, or asks for samples. |
