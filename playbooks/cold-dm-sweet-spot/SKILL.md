@@ -7,7 +7,7 @@ description: >-
 ---
 # Cold DM sweet spot
 
-Why this exists: outreach experts report that AI-personalized DMs kill connections: long, hyper-specific hooks about the recipient's work read as machine-written, and the reader can't tell what you want. A plain copy-paste ask beats that. But a bare "can I send you an offer?" from a stranger can look like spam. The sweet spot sits between them.
+Why this exists: outreach experts (e.g. a GTM-in-public community lead) report that AI-personalized DMs kill connections: long, hyper-specific hooks about the recipient's work read as machine-written, and the reader can't tell what you want. A plain copy-paste ask beats that. But a bare "can I send you an offer?" from a stranger can look like spam. The sweet spot sits between them.
 
 # Rules
 1. Line 1 or 2 states who you are and what you want (the ask). No making them read to the end to find it.
