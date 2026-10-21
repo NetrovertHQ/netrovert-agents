@@ -46,6 +46,9 @@ These explorer APIs block keyless use: Base, Arbitrum and Robinhood Blockscout (
 - EVM USD is quantity × the current DexScreener price, not the price at fill time.
 - For an EVM wallet that is far behind, a scan covers only the latest `evm_max_blocks_per_scan_chunks` chunks.
 
+## HyperEVM and Ink
+`--chain hyperevm` (aliases hype/hyper/hl) uses RPC logs (rpc.purroofgroup.com, 99,999-block ranges; rpc.hyperliquid.xyz as fallback). `--chain ink` uses Blockscout (explorer.inkonchain.com) with RPC fallback. Quote tokens: WHYPE/USDT0/USDC and WETH/USDC.e.
+
 ## Setup
 
 Copy config.example.json to config.json and set your own values. The example numbers are generic placeholders, not tuned settings.

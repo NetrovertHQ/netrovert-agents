@@ -5,6 +5,7 @@
 # Data, state, caches, logs (personal or generated)
 *.json
 !config.example.json
+!follows_config.example.json
 *.csv
 *.db
 *.sqlite*
@@ -20,3 +21,9 @@ narratives/
 practice/
 __pycache__/
 .venv/
+# Bot runtime files
+*.log.*
+*.pid
+*.heartbeat
+*.bin-runtime
+samples/

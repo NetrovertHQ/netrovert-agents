@@ -74,6 +74,15 @@ The X tools run on the agent side, so grading is a documented procedure:
 
 Example: Dacity (`nxPqZ4F7ux8Vph5NFu25rEP6Kx9Gr1U6Fmj36Rjpump`). `narratives/<addr>.json` is the grade now: CONFIRMED by the official trailer. `narratives/archive/dacity_leak_phase.json` is the grade during the leak phase: UNCONFIRMED.
 
+## HyperEVM and Ink (own on-chain checks)
+GoPlus doesn't support HyperEVM (999) or Ink (57073) ("main chain is not supported", checked 2026-10-20), so `onchain.py` runs our own checks with free, keyless sources:
+- **RPC** (HyperEVM: rpc.hyperliquid.xyz/evm, rpc.purroofgroup.com for archive + 100k-block logs; Ink: rpc-gel/rpc-qnd.inkonchain.com): owner(), EIP-1967/beacon/1167 proxy slots, bytecode selectors, balances.
+- **Honeypot sim**: `sim/HoneypotSim.sol` (build the runtime to `sim/HoneypotSim.bin-runtime`; it is not in this repo, and without it the honeypot sim is skipped and reported as unknown) is injected with an `eth_call` state override. It buys ~$25 through the deepest wrapped-native pool (Uniswap-V2 style or V3/Algebra-style CL), sends 1% to a fresh address, sells the rest, and gives buy tax, sell/transfer tax and round-trip loss. Nothing is signed or sent.
+- **Sourcify** (both chains) and **Blockscout** (Ink: explorer.inkonchain.com) for verified ABI, proxy type, creator and holders.
+- **Holders on HyperEVM**: rebuilt from Transfer logs from the creation block, checked with balanceOf (capped by `max_log_chunks`, about 46 days of history).
+- **LP lock**: V2 pools only (burned + `lp_lockers`). CL/V3 positions are NFTs, so this stays unknown.
+Anything that can't be measured stays `unknown`, so it never counts as a pass. Rebuild the sim with py-solc-x 0.8.24 (`optimize`, `via_ir`).
+
 ## Setup
 
 Copy config.example.json to config.json and set your own values. The example numbers are generic placeholders, not tuned settings.

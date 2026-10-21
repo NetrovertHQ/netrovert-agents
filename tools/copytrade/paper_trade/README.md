@@ -41,6 +41,8 @@ python3 paper_trade.py backtest [--wallets "E/acc guy,Nullmask winner"] [--days 
 - `config.backtest_candles` sets the candle size per chain: Robinhood uses 5-minute GeckoTerminal candles. `--max-buys N` caps the run to the latest N buys.
 - A wallet sell inside the entry candle exits at the entry price (costs only), shown as `mirror_sell_same_candle`.
 
+HyperEVM and Ink candles come from GeckoTerminal networks `hyperevm` and `ink`.
+
 ## Setup
 
 Copy config.example.json to config.json and set your own values. The example numbers are generic placeholders, not tuned settings.

@@ -63,7 +63,8 @@ Source code for the Copy Trading bot lives in `tools/copytrade/`. Each folder ha
 - `smart_money/`: scores and discovers wallets by PnL, win rate and copyability.
 - `x_calls/`: extracts and grades token calls posted on X.
 - `paper_trade/`: paper-trades copied buys to test strategies without real money.
-- `tg_bot/`: Telegram bot that answers BUY / CAREFUL / SKIP for a token. It never holds keys or trades.
+- `tg_bot/`: Netro Signal ([@netrosignal_bot](https://t.me/netrosignal_bot)), a Telegram bot that answers BUY / CAREFUL / SKIP for a token. It never holds keys or trades.
+  Shipped from user feedback in one night (Oct 20-21, 2026): launch alerts, MEV-protected Jupiter links, practice limit orders and DCA, and faster replies under load, after [@phantom_zxx](https://x.com/phantom_zxx) asked for them. See `tools/copytrade/tg_bot/README.md`.
 
 Secrets come from environment variables only (see `tools/copytrade/.env.example`). Config, watchlists, state, caches and results are not in the repo. Each tool expects its own local `config.json`.
 

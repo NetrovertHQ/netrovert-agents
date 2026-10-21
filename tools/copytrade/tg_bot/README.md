@@ -47,6 +47,22 @@ All of these numbers are in `config.json`. CLI: `python3 gate.py <token> [--chai
 
 Token check runs with `--no-narrative` here, for speed.
 
+**Chains:** HyperEVM (aliases hyperevm/hype/hyper/hl/hyperliquid) and Ink get full safety checks through token_check's on-chain fallback. HyperSwap tokens also get a "Swap on Hyperswap" button.
+
+## Shipped from user feedback in one night
+
+Built between the night of Oct 20 and the morning of Oct 21, 2026, after [@phantom_zxx](https://x.com/phantom_zxx) publicly asked for sniping, MEV protection, limit orders and DCA, and better speed under traffic.
+
+1. **New-launch alerts** (key-free) every 3 minutes across Solana, Robinhood Chain, HyperEVM and Base, from DexScreener, GeckoTerminal and pump.fun. Each token gets a safety check, then a one-tap buy link or a practice snipe. Opt in with `/launches` (`launches.py`).
+2. **MEV protection** through Jupiter Ultra deep links for swap, limit and DCA.
+3. **Practice limit orders and DCA** (`/limit`, `/dca`, `/orders`, `/cancel`) that fill at live prices (`orders.py`).
+4. **Speed**: fast and heavy worker lanes, a "Checking…" reply first, a single-flight cache (`cache.py`), and one heavy job per user. With 50 concurrent users, `/start` went from about 21s to 0.2s.
+5. **Hardening**: no network calls while holding locks, per-host rate limits with 429 backoff, atomic writes and log rotation. A 100-user stress test gave p95 0.10s with zero errors.
+6. **Supervisor**: an outside supervisor (`supervise.sh`, `supervise_start.sh`, `autostart.sh`) watches a heartbeat, restarts a frozen bot within about 2 minutes, and starts it again after a reboot.
+7. **Contract checks**: Etherscan v2 verified-source and proxy checks on Ethereum, Base, Arbitrum, BNB, Polygon and HyperEVM (`token_check/etherscan.py`, `token_check/onchain.py`).
+8. **UX**: reply with a number or tap $20/$50/$100/$250 to complete `/buy`, plus a health check across 9 chains.
+9. **In progress**: follow alerts for new projects followed by about 20 big ecosystem X accounts (`follows.py`, needs `TWITTERAPI_IO_KEY`; copy `follows_config.example.json` to `follows_config.json` and add the accounts).
+
 ## Setup
 
 Copy config.example.json to config.json and set your own values. The example numbers are generic placeholders, not tuned settings.
