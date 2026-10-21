@@ -37,6 +37,14 @@
     "robinhood": [
       "minute",
       10
+    ],
+    "hyperevm": [
+      "minute",
+      10
+    ],
+    "ink": [
+      "minute",
+      10
     ]
   },
   "backtest_backfill_n_evm": 10

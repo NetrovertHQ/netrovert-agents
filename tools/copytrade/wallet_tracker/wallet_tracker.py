@@ -7,8 +7,9 @@ import requests
 HERE = os.path.dirname(os.path.abspath(__file__))
 LAGOS = timezone(timedelta(hours=1), "WAT")
 TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
-EVM_CHAINS = ["ethereum", "base", "bsc", "arbitrum", "robinhood"]
-ALIASES = {"sol": "solana", "eth": "ethereum", "bnb": "bsc", "arb": "arbitrum", "rh": "robinhood", "robinhoodchain": "robinhood"}
+EVM_CHAINS = ["ethereum", "base", "bsc", "arbitrum", "robinhood", "hyperevm", "ink"]
+ALIASES = {"sol": "solana", "eth": "ethereum", "bnb": "bsc", "arb": "arbitrum", "rh": "robinhood", "robinhoodchain": "robinhood",
+           "hype": "hyperevm", "hyper": "hyperevm", "hl": "hyperevm", "hyperliquid": "hyperevm"}
 S = requests.Session(); S.headers["User-Agent"] = "wallet-tracker/1.0"
 
 
@@ -105,7 +106,7 @@ def sol_parse_tx(tx, wallet, sig):
         i = keys.index(wallet)
         sol = (meta["postBalances"][i] - meta["preBalances"][i]) / 1e9
         if i == 0: sol += meta.get("fee", 0) / 1e9  # ignore the network fee
-    wsol = "So" + "1" * 40 + "2"  # wrapped SOL mint
+    wsol = "So" + "1" * 40 + "2"
     delta[wsol] = delta.get(wsol, 0) + sol
     # ignore dust: rent/fee-sized SOL moves and NFTs / 0-decimal tokens
     delta = {m: d for m, d in delta.items() if abs(d) > (CFG["solana"].get("min_sol_leg", 0.005) if m == wsol else 1e-9) and m not in nft}
@@ -529,7 +530,7 @@ def scan(args):
 
 def norm_chain(c, addr):
     if c: c = ALIASES.get(c.lower(), c.lower())
-    elif addr.startswith("0x"): sys.exit("EVM address: pass --chain ethereum|base|bsc|arbitrum|robinhood")
+    elif addr.startswith("0x"): sys.exit("EVM address: pass --chain ethereum|base|bsc|arbitrum|robinhood|hyperevm|ink")
     else: c = "solana"
     if c != "solana" and c not in EVM_CHAINS: sys.exit(f"unsupported chain {c}")
     if c == "solana" and not re.fullmatch(r"[1-9A-HJ-NP-Za-km-z]{32,44}", addr): sys.exit("not a Solana address")

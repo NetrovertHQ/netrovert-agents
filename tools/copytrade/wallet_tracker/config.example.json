@@ -127,6 +127,48 @@
         }
       ],
       "quotes": {}
+    },
+    "hyperevm": {
+      "chain_id": 999,
+      "dex": "hyperevm",
+      "native": "HYPE",
+      "explorer_tx": "https://hyperevmscan.io/tx/",
+      "rpcs": [
+        {
+          "url": "https://rpc.purroofgroup.com",
+          "max_range": 10
+        },
+        {
+          "url": "https://rpc.hyperliquid.xyz/evm",
+          "max_range": 10
+        }
+      ],
+      "quotes": {
+        "0x5555555555555555555555555555555555555555": "WHYPE",
+        "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb": "USDT",
+        "0xb88339cb7199b77e23db6e890353e22632ba630f": "USDC"
+      }
+    },
+    "ink": {
+      "chain_id": 57073,
+      "dex": "ink",
+      "native": "ETH",
+      "explorer_tx": "https://explorer.inkonchain.com/tx/",
+      "blockscout": "https://explorer.inkonchain.com",
+      "rpcs": [
+        {
+          "url": "https://rpc-gel.inkonchain.com",
+          "max_range": 10
+        },
+        {
+          "url": "https://rpc-qnd.inkonchain.com",
+          "max_range": 10
+        }
+      ],
+      "quotes": {
+        "0x4200000000000000000000000000000000000006": "WETH",
+        "0xf1815bd50389c46847f0bda824ec8da914045d14": "USDC.e"
+      }
     }
   },
   "evm_max_blocks_per_scan_chunks": 10,

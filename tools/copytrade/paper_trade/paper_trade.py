@@ -17,7 +17,8 @@ TRADES = os.path.join(HERE, "trades.json"); RES = os.path.join(HERE, "results");
 TC = os.path.join(ROOT, "token_check", "token_check.py"); WT = os.path.join(ROOT, "wallet_tracker", "wallet_tracker.py")
 XC = os.path.join(ROOT, "x_calls", "calls.json")
 LAGOS = timezone(timedelta(hours=1)); S = requests.Session(); S.headers["User-Agent"] = "paper_trade/1.0"
-GT_NET = {"solana": "solana", "ethereum": "eth", "base": "base", "bsc": "bsc", "arbitrum": "arbitrum", "robinhood": "robinhood"}
+GT_NET = {"solana": "solana", "ethereum": "eth", "base": "base", "bsc": "bsc", "arbitrum": "arbitrum", "robinhood": "robinhood",
+          "hyperevm": "hyperevm", "ink": "ink"}  # GeckoTerminal network ids (verified 2026-10-20)
 DS_CHAIN = {"robinhood": "robinhood"}
 
 
