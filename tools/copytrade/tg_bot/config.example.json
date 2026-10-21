@@ -1,5 +1,5 @@
 {
-  "owner_chat_id": 0,
+  "owner_chat_id": null,
   "size_cap_buy_usd": 10,
   "size_cap_careful_usd": 10,
   "daily_loss_limit_usd": 10,
@@ -15,5 +15,13 @@
   "practice_start_usd": 10,
   "practice_fee_pct": 10,
   "practice_copy_default_usd": 10,
-  "practice_max_positions": 10
+  "practice_max_positions": 10,
+  "public_labels": {
+    "<wallet-address>": {
+      "label": "<public label>",
+      "base": "<public label>",
+      "desc": "<short public description>",
+      "auto_desc": true
+    }
+  }
 }

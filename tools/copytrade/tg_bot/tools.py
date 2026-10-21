@@ -1,3 +1,4 @@
+import re
 """Owner-only tool wrappers for Netro Signal. Each returns (text, buttons_or_None). Read-only toward funds: no keys, no trades."""
 import glob, json, os, subprocess, sys, time
 from datetime import datetime
@@ -15,20 +16,24 @@ def sh(script, *args, timeout=300):
 
 
 def st(): return gate.load(STATE, {})
-def st_save(s): json.dump(s, open(STATE, "w"), indent=1)
+def st_save(s): gate.atomic_dump(s, STATE, indent=1)
 def ago(sec): return f"{int(sec//60)} min" if sec >= 60 else f"{int(sec)} s"
 
 
 # ---------- token ----------
 def check(args):
     if not args: return "How to use: /check <token address> [chain]", None
-    g = gate.gate(args[0], args[1].lower() if len(args) > 1 else None)
+    tok, ch, _ = gate.split_args(args)
+    if not tok: return "How to use: /check <token address> [chain, e.g. sol, rh, eth, base, ink]", None
+    g = gate.gate(tok, ch)
     return gate.card_text(g), g["buttons"]
 
 
 def safety(args):
     if not args: return "How to use: /safety <token address> [chain]", None
-    tc = gate.token_check(args[0], args[1].lower() if len(args) > 1 else None)
+    tok, ch, _ = gate.split_args(args)
+    if not tok: return "How to use: /safety <token address> [chain, e.g. sol, rh, eth, base, ink]", None
+    args = [tok]; tc = gate.token_check(tok, ch)
     if not tc.get("verdict"): return "😕 I couldn't find that token. Check the address and chain.", None
     E = gate.esc; m = tc.get("market") or {}
     head = {"PASS": "🟢 <b>Passed</b>", "WARN": "🟡 <b>Some worries</b>", "KILL": "🔴 <b>Failed</b>"}[tc["verdict"]]
@@ -111,12 +116,14 @@ def scan(args=None, force=False):
 # ---------- smart money ----------
 def score(args):
     if not args: return "How to use: /score <wallet address> [chain]", None
+    if not re.fullmatch(r"0x[0-9a-fA-F]{40}|[1-9A-HJ-NP-Za-km-z]{32,44}", args[0]):
+        return "That doesn't look like a wallet address. Paste the full address, like /score 7xKX…(32-44 letters) or 0x…", None
     c = gate.cfg(); s = st(); day = datetime.now(gate.LAGOS).strftime("%Y-%m-%d"); used = s.get("score_used", {}).get(day, 0)
     if used >= c.get("score_per_day", 10): return f"⏱ That's {used} scores today, the daily max. It resets at midnight WAT.", None
     s["score_used"] = {day: used + 1}; st_save(s)
-    rc, out, err = sh(SM, "score", args[0], *(["--chain", args[1].lower()] if len(args) > 1 else []), "--json", timeout=300)
+    rc, out, err = sh(SM, "score", args[0], *(["--chain", gate.norm_chain(args[1])] if len(args) > 1 else []), "--json", timeout=300)
     try: r = json.loads(out)
-    except Exception: return f"😕 Scoring failed: {(err or out).strip()[-200:]}", None
+    except Exception: return "😕 Scoring failed: " + ((err or out).strip().splitlines() or ["no output"])[-1][-160:], None
     return score_words(r), None
 
 
@@ -211,7 +218,7 @@ def paper(args=None):
 
 def papertrade(args):
     if not args: return "How to use: /papertrade <token address> [chain]", None
-    rc, out, err = sh(PT, "open", args[0], "--source", "manual", *(["--chain", args[1].lower()] if len(args) > 1 else []), timeout=180)
+    rc, out, err = sh(PT, "open", args[0], "--source", "manual", *(["--chain", gate.norm_chain(args[1])] if len(args) > 1 else []), timeout=180)
     o = out.strip()
     if o.startswith("OPEN"): return f"Fake $100 trade opened: {o[5:]}\nIt gets tracked hourly (stop at -30%, take profit at +50% and +100%, max 3 days). See /paper manual.", None
     return f"😕 Didn't open it: {(err.strip().splitlines() or ['unknown reason'])[-1]}", None
