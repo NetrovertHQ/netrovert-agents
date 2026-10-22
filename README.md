@@ -74,6 +74,8 @@ Source code for the Copy Trading bot lives in `tools/copytrade/`. Each folder ha
 
 Secrets come from environment variables only (see `tools/copytrade/.env.example`). Config, watchlists, state, caches and results are not in the repo. Each tool expects its own local `config.json`.
 
+Source for the New Connections agent's DM reply scan lives in `tools/new-connections/scan/` (see its README).
+
 ## How to use these playbooks
 
 - Each folder in `playbooks/` holds one `SKILL.md`. Its frontmatter has a `name` and a `description` that says when the playbook should be used.

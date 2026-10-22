@@ -67,6 +67,14 @@ Built between the night of Oct 20 and the morning of Oct 21, 2026, after [@phant
 
 `/fumbles` looks at your last 40 practice sells and checks how high each token went after you sold (GeckoTerminal price history, free and keyless; falls back to the live price). It totals what holding would have paid and sends a card with your top 3 "sold too early" trades, or a clean-exits card if none went higher. Practice money only. Idea credit: [@Akcrypts](https://x.com/Akcrypts) on X.
 
+## Referrals
+
+`/invite` gives each player a personal `t.me/<bot>?start=ref_<code>` link (code is an HMAC of the chat id with a per-install salt). A referrer earns `ref_points_signup` points when someone new opens practice mode from their link and `ref_points_first_trade` more on that person's first practice trade. `/referrals` shows the top inviters. Data lives in `referrals.json` and `seen_users.json` (gitignored).
+
+## /fumbles <wallet>
+
+`/fumbles <Solana address>` (or send an address after tapping the fumbles button) runs the same "sold too early" check on a real wallet's last 30 days of sells, using public on-chain data only (`wfumbles.py`). It needs your own `HELIUS_API_KEY` in the environment and is capped by `wallet_scan_per_hour`, `wallet_scan_daily_credits` and the other `wallet_scan_*` keys. Practice fumbles now read peaks from the token's own side of the pool and skip implausible peaks.
+
 ## Deploy
 
 Always-on VPS setup lives in [`../deploy/`](../deploy/). Replace `YOUR_USER` and the paths with your own.
