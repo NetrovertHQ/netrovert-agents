@@ -23,5 +23,13 @@
       "desc": "<short public description>",
       "auto_desc": true
     }
-  }
+  },
+  "ref_points_signup": 100,
+  "ref_points_first_trade": 10,
+  "wallet_scan_per_hour": 10,
+  "wallet_scan_days": 10,
+  "wallet_scan_max_pages": 10,
+  "wallet_scan_max_tokens": 10,
+  "wallet_scan_max_secs": 60,
+  "wallet_scan_daily_credits": 100
 }

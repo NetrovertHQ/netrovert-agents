@@ -42,11 +42,15 @@ def hold_fmt(sec):
     return f"{h // 24}d {h % 24}h"
 
 
-def _base():
+def _base(real=False):
     im = Image.new("RGBA", (W, H), BG + (255,)); d = ImageDraw.Draw(im)
     d.rectangle([0, 0, W, 6], fill=ACCENT)
     d.rounded_rectangle([60, 52, 76, 86], 4, fill=ACCENT)
     d.text((92, 46), "Netro Signal", font=font(38, "Bold"), fill=TXT)
+    if real:
+        d.line([60, 610, W - 60, 610], fill=LINE, width=1)
+        d.text((60, 626), "Netro Signal by Netrovert", font=font(20), fill=MUTED)
+        return im, d
     tag = "PRACTICE · NOT REAL MONEY"; f = font(20, "Bold"); tw = d.textlength(tag, font=f)
     d.rounded_rectangle([W - 60 - tw - 36, 48, W - 60, 88], 20, fill=(58, 46, 18), outline=WARN, width=2)
     d.text((W - 60 - tw - 18, 57), tag, font=f, fill=WARN)
@@ -145,10 +149,12 @@ def fumble_card(f, out=None):
 
 def _fumble_card(f, out=None):
     """f: name, total, count, top=[{symbol, sold, peak, missed, x}]"""
-    im, d = _base()
-    d.text((60, 122), "Fumbled trades", font=font(44, "Bold"), fill=TXT)
+    real = bool(f.get("addr")); im, d = _base(real)
+    d.text((60, 122), f"{f['addr'][:4]}…{f['addr'][-4:]}'s fumbles" if real else "Fumbled trades", font=font(44, "Bold"), fill=TXT)
     n = f["count"]
-    d.text((60, 178), f"Sold too early {n} time{'s' if n != 1 else ''}. Here's what holding would have paid.", font=font(22), fill=MUTED)
+    sub = (f"Sold too early {n} time{'s' if n != 1 else ''} in the last 30 days. Real trades, real money." if real
+           else f"Sold too early {n} time{'s' if n != 1 else ''}. Here's what holding would have paid.")
+    d.text((60, 178), sub, font=font(22), fill=MUTED)
     _gojo(im, "cry" if f["top"] else "up"); d = ImageDraw.Draw(im)
     if not f["top"]:
         d.text((60, 270), "No fumbles!", font=font(96, "ExtraBold"), fill=UP)

@@ -13,7 +13,7 @@ import argparse, json, os, sys, time, traceback, threading
 from collections import defaultdict, deque
 from concurrent.futures import ThreadPoolExecutor
 import requests
-import gate, tools, practice, card, launches, orders, follows
+import gate, tools, practice, refs, card, launches, orders, follows
 
 NAME = "Netro Signal"; HERE = gate.HERE; SEEN = os.path.join(HERE, "pushed.json")
 OWNER_CMDS = [
@@ -29,14 +29,15 @@ OWNER_CMDS = [
 PUBLIC_CMDS = [
     ("practice", "🎮 Get $1,000 of fake money to practice", False), ("buy", "🛒 Fake buy: /buy token amount", True),
     ("sell", "💸 Fake sell: /sell token [percent]", True), ("portfolio", "💼 Your practice portfolio", True),
-    ("history", "📜 Your practice trades", False), ("pnl", "🧾 Your practice PnL card", True), ("fumbles", "😭 Trades you sold too early", True), ("reset", "🔄 Start practice over", False),
+    ("history", "📜 Your practice trades", False), ("pnl", "🧾 Your practice PnL card", True), ("fumbles", "😭 Sold too early? /fumbles, or /fumbles <wallet> for a real Solana wallet", True), ("reset", "🔄 Start practice over", False),
     ("stoploss", "🛑 Auto-sell if down X%", False), ("copy", "🤖 Auto-copy a wallet with fake money", False),
     ("uncopy", "✋ Stop copying", False), ("copygate", "🛡 Skip risky tokens when copying", False),
     ("limit", "🎯 Practice limit buy: /limit token amount -20%", True), ("dca", "🧩 Practice buy in pieces: /dca token total pieces every", True),
     ("orders", "📋 Your practice orders", False), ("cancel", "✖️ Cancel a practice order", False),
     ("launches", "🚀 Alerts for new tokens that pass our check", False),
     ("follows", "🐦 Get alerts when new projects follow big crypto accounts", False),
-    ("leaderboard", "🏆 Top practice players", False), ("help", "❓ What Netro Signal can do", False)]
+    ("leaderboard", "🏆 Top practice players", False), ("invite", "👥 Invite friends and earn points", False),
+    ("referrals", "🎖 Top inviters", False), ("help", "❓ What Netro Signal can do", False)]
 LONG = {c for c, _, l in OWNER_CMDS + PUBLIC_CMDS if l}
 RATE = defaultdict(deque); BUSY = {}
 # Two lanes so cheap replies never queue behind slow safety checks:
@@ -205,10 +206,11 @@ def dispatch(cmd, args, chat, name, is_owner):
     pub = {"practice": lambda: P.start(chat, name), "buy": lambda: P.buy_request(chat, args), "sell": lambda: P.sell(chat, args),
            "portfolio": lambda: P.portfolio(chat), "history": lambda: P.history(chat), "reset": lambda: P.reset(chat, name),
            "stoploss": lambda: P.stoploss(chat, args), "copy": lambda: P.copy(chat, args), "uncopy": lambda: P.uncopy(chat),
-           "copygate": lambda: P.copygate(chat, args), "leaderboard": lambda: P.leaderboard(chat), "pnl": lambda: pnl(chat, args), "fumbles": lambda: fumbles(chat),
+           "copygate": lambda: P.copygate(chat, args), "leaderboard": lambda: P.leaderboard(chat), "pnl": lambda: pnl(chat, args), "fumbles": lambda: fumbles(chat, args, is_owner),
            "limit": lambda: orders.limit(chat, args), "dca": lambda: orders.dca(chat, args), "orders": lambda: orders.list_orders(chat),
            "cancel": lambda: orders.cancel(chat, args), "launches": lambda: launches.command(chat, args), "follows": lambda: follows.command(args, chat, is_owner),
-           "help": lambda: help_text(is_owner), "start": lambda: welcome(is_owner, name)}
+           "help": lambda: help_text(is_owner), "start": lambda: (welcome(is_owner, name), None, [("👥 Invite friends", "rf:")]),
+           "invite": lambda: refs.invite(chat, name), "referrals": lambda: refs.leaderboard()}
     own = {"stats": lambda: (owner_stats(), None), "check": lambda: tools.check(args), "safety": lambda: tools.safety(args), "watch": lambda: tools.watch(args),
            "unwatch": lambda: tools.unwatch(args), "wallets": lambda: tools.wallets(), "score": lambda: tools.score(args),
            "smartmoney": lambda: tools.smartmoney(), "callers": lambda: tools.callers(), "addcaller": lambda: tools.addcaller(args),
@@ -242,7 +244,8 @@ def pnl(chat, args):
     return [(Photo(card.trade_card(d), trade_caption(d)), None, None)]
 
 
-def fumbles(chat):
+def fumbles(chat, args=None, is_owner=False):
+    if args: return wallet_fumbles(chat, args[0], is_owner)
     f = practice.fumbles(chat)
     if not f: return "🎮 Send /practice first to get your fake $1,000."
     if not f["checked"]: return "No closed trades yet, so nothing to fumble. Sell something and check back 😄"
@@ -250,9 +253,25 @@ def fumbles(chat):
         return [(Photo(card.fumble_card(f), f"✅ Checked your last {f['checked']} sells. None of them went higher after you got out. Clean exits!"), None, None)]
     lines = [f"😭 You left {practice.money(f['total'])} on the table across {f['count']} trade{'s' if f['count'] != 1 else ''}."]
     for r in f["top"]:
-        lines.append(f"${r['symbol']}: sold at {practice.px_fmt(r['sold'])}, it went to {practice.px_fmt(r['peak'])}" + (" (price now)" if r["src"] == "now" else "")
+        lines.append(f"${r['symbol']}: sold at {card.px_fmt(r['sold'])}, it went to {card.px_fmt(r['peak'])}" + (" (price now)" if r["src"] == "now" else "")
                      + f". That's {practice.money(r['missed'])} missed.")
     lines.append("Practice mode, fake money. Peaks are the highest price since you sold.")
+    return [(Photo(card.fumble_card(f), "\n".join(lines)[:1000]), None, None)]
+
+
+def wallet_fumbles(chat, addr, is_owner=False):
+    import wfumbles
+    f, err = wfumbles.scan(chat, addr.strip(), is_owner)
+    if err: return err
+    who = wfumbles.short(f["addr"])
+    if not f["checked"]: return f"🔎 I couldn't find any sells from {who} in the last 30 days. Nothing to fumble!"
+    if not f["top"]:
+        return [(Photo(card.fumble_card(f), f"✅ {who}: checked {f['checked']} sells from the last 30 days. Nothing went higher after they sold. Clean exits!"), None, None)]
+    lines = [f"😭 {who} left {practice.money(f['total'])} on the table across {f['count']} sell{'s' if f['count'] != 1 else ''} in the last 30 days."]
+    for r in f["top"]:
+        lines.append(f"${r['symbol']}: sold at {card.px_fmt(r['sold'])}, it went to {card.px_fmt(r['peak'])}" + (" (price now)" if r["src"] == "now" else "")
+                     + f". That's {practice.money(r['missed'])} missed.")
+    lines.append("Peaks are the highest price since each sell. Public on-chain data only.")
     return [(Photo(card.fumble_card(f), "\n".join(lines)[:1000]), None, None)]
 
 
@@ -270,7 +289,7 @@ def publicname(args):
     for i in range(len(args) - 1, 0, -1):
         w = gate.find_wallet(" ".join(args[:i]))
         if w: break
-    else: return "🤔 I couldn't match a wallet nickname. Usage: /publicname <nickname> <public label>hood whale #1"
+    else: return "🤔 I couldn't match a wallet nickname. Usage: /publicname <nickname> <public label>"
     if gate.is_test(w["label"]): return "Test wallets aren't shown to practice users."
     new = " ".join(args[i:]).strip()[:40]
     if any(nk.lower() in new.lower() for nk in nick.values() if len(nk) > 2): return "That label has a private nickname in it. Pick something else."
@@ -307,11 +326,18 @@ def handle_message(tg, msg):
     c = gate.cfg(); chat = msg.get("chat", {}).get("id"); text = (msg.get("text") or "").strip()
     if msg.get("chat", {}).get("type") != "private": return
     pend = PENDING.pop(chat, None)
+    if not text.startswith("/") and pend and pend["cmd"] == "fumbles" and pend["exp"] > time.time() and re.fullmatch(r"[1-9A-HJ-NP-Za-km-z]{32,44}", text):
+        text = "/fumbles " + text
     if not text.startswith("/"):
-        amt = parse_amount(text) if pend and pend["exp"] > time.time() else None
+        amt = parse_amount(text) if pend and pend["exp"] > time.time() and pend["cmd"] != "fumbles" else None
         if not amt: return
         text = " ".join(["/" + pend["cmd"]] + pend["pre"] + [amt] + pend["post"])
     cmd, *args = text.split(); cmd = cmd[1:].split("@")[0].lower()
+    try:
+        fresh = refs.touch(chat)
+        if fresh and cmd == "start" and args and args[0].startswith("ref_"):
+            refs.attach(chat, args[0], (msg.get("from") or {}).get("first_name") or (msg.get("from") or {}).get("username"))
+    except Exception: log("referral error: " + traceback.format_exc().strip().splitlines()[-1])
     miss = needs_amount(cmd, args)
     if miss and practice.get(chat):
         PENDING[chat] = {"cmd": cmd, "pre": miss[0], "post": miss[1], "exp": time.time() + 300}
@@ -334,7 +360,7 @@ def handle_message(tg, msg):
         BUSY[id(job)] = time.time(); t0 = time.time(); mid = None
         try:
             if (heavy or cmd in LONG) and not quick_no:  # quick 'Checking…' now, then edit it with the result
-                mid = (tg.send(chat, "⏳ Checking… one moment.") or {}).get("result", {}).get("message_id")
+                mid = (tg.send(chat, "🔎 Scanning wallet… this can take a minute." if cmd == "fumbles" and args else "⏳ Checking… one moment.") or {}).get("result", {}).get("message_id")
             out = dispatch(cmd, args, chat, name, is_owner)
             for i, (t, b, cb) in enumerate(out):
                 if i == 0 and mid and not isinstance(t, Photo): tg.edit(chat, mid, t, b, cb)
@@ -361,7 +387,7 @@ def handle_callback(tg, cq):
         if not pend or pend["exp"] < time.time():
             PENDING.pop(chat, None); FAST.submit(tg.send, chat, "⌛ That one expired. Send the command again."); return
         return handle_message(tg, {"chat": {"id": chat, "type": "private"}, "from": cq.get("from"), "text": data[3:]})
-    if not chat or not data[:3] in ("pb:", "px:", "pc:", "ls:", "pf:"): return
+    if not chat or not data[:3] in ("pb:", "px:", "pc:", "ls:", "pf:", "rf:"): return
     if chat != gate.cfg().get("owner_chat_id") and limited(chat): return
     def job():
         BUSY[id(job)] = time.time()
@@ -371,7 +397,11 @@ def handle_callback(tg, cq):
                 mid = (tg.send(chat, "⏳ Buying…") or {}).get("result", {}).get("message_id")
                 r = practice.snipe(chat, tok, launches.SHORT.get(ch, ch))  # no re-check: verdict came from the launch scan
                 tg.edit(chat, mid, r) if mid else tg.send(chat, r)
+            elif data.startswith("rf:"):
+                t, bb = refs.invite(chat, (cq.get("from") or {}).get("first_name") or ""); tg.send(chat, t, bb)
             elif data.startswith("pf:"):
+                PENDING[chat] = {"cmd": "fumbles", "pre": [], "post": [], "exp": time.time() + 300}
+                tg.send(chat, "😭 Here are your practice fumbles. Want to see a real wallet's? Just send me its Solana address.")
                 for t, bb, cb in (lambda r: [(r, None, None)] if isinstance(r, str) else r)(fumbles(chat)): tg.out(chat, t, bb, cb)
             elif data.startswith("pc:"):
                 for t, b, cb in (lambda r: [(r, None, None)] if isinstance(r, str) else r)(pnl(chat, [data[3:]])): tg.out(chat, t, b, cb)
@@ -403,7 +433,7 @@ def owner_stats():
     L = ["📊 <b>Netro Signal stats</b>", "", f"👥 Practice players: <b>{len(us)}</b>",
          f"Active in the last 24h: {act(86400)} · last 7 days: {act(7*86400)}",
          f"Made at least one fake trade: {traded}", f"Fake trades closed: {trades} · open now: {opens}",
-         f"Copying a wallet: {copying}", f"Commands from players in the last 24h: {cmds['user']} (you: {cmds['owner']})"]
+         f"Copying a wallet: {copying}", refs.stats(), f"Commands from players in the last 24h: {cmds['user']} (you: {cmds['owner']})"]
     if top:
         L += ["", "🏆 <b>Top balances</b> (open trades at cost)"]
         L += [f"{i}. {gate.esc(u.get('name') or 'anon')}: ${worth(u):,.0f}" for i, u in enumerate(top, 1)]
@@ -430,7 +460,7 @@ def _watchdog():
 
 
 def run():
-    tg = TG(token()); me = tg.call("getMe", timeout=15)
+    tg = TG(token()); me = tg.call("getMe", timeout=15); refs.SEND = tg.send
     if not me.get("ok"): sys.exit("getMe failed: check the token.")
     gate.public_wallets(); log(f"practice: migrated {practice.migrate_all()} users to public labels")
     log(f"{NAME} running as @{me['result'].get('username')}, polling"); set_commands(tg, gate.cfg().get("owner_chat_id")); set_profile(tg)

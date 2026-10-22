@@ -65,7 +65,10 @@ def start(cid, name=""):
                   None, [("😭 Fumbled trades", "pf:")])
     c = gate.cfg(); u = {"chat_id": cid, "name": name, "start": c.get("practice_start_usd", 1000), "cash": c.get("practice_start_usd", 1000),
                          "positions": {}, "history": [], "stoploss_pct": None, "copy": None, "copygate": True, "pending": {}, "created": now()}
-    put(u); return INTRO + "\n\nTry it: /buy <token address> 50"
+    put(u)
+    try: import refs; refs.joined(cid)
+    except Exception: pass
+    return INTRO + "\n\nTry it: /buy <token address> 50"
 
 
 def _buy(u, token, usd, px, sym, chain, why):
@@ -76,6 +79,9 @@ def _buy(u, token, usd, px, sym, chain, why):
     p = u["positions"].setdefault(token, {"symbol": sym, "chain": chain, "qty": 0, "cost": 0, "opened": now(), "ts": time.time(), "via": why})
     p["qty"] += qty; p["cost"] += usd; u["cash"] -= usd
     u["history"].append({"t": now(), "side": "BUY", "token": token, "symbol": sym, "usd": round(usd, 2), "px": fill, "via": why})
+    if len(u["history"]) == 1:
+        try: import refs; threading.Thread(target=refs.traded, args=(u["chat_id"],), daemon=True).start()
+        except Exception: pass
     return p, None
 
 
@@ -455,33 +461,78 @@ OHLCV = cache.TTL(900, miss_ttl=120)
 GT_NET = {"solana": "solana", "ethereum": "eth", "bsc": "bsc", "base": "base", "arbitrum": "arbitrum", "polygon": "polygon_pos", "avalanche": "avax"}
 
 
+QUOTES = {"So" + "1" * 40 + "2", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+          "0x42" + "0" * 37 + "6", "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"}
+SIDES = cache.TTL(86400, miss_ttl=120)
+
+
 def _pool(token, chain):
+    """Best pool with the token as DexScreener base; prefer SOL/USDC/USDT (or WETH/USDC) quoted pools."""
     ps = cache.PAIRS.get(token.lower(), lambda: _pairs(token)) or []
     ps = [p for p in ps if p["baseToken"]["address"].lower() == token.lower() and (not chain or p["chainId"] == chain)]
-    return max(ps, key=lambda p: (p.get("liquidity") or {}).get("usd") or 0) if ps else None
+    liq = lambda p: (p.get("liquidity") or {}).get("usd") or 0
+    good = [p for p in ps if p["quoteToken"]["address"] in QUOTES or p["quoteToken"]["address"].lower() in QUOTES]
+    good = [p for p in good if liq(p) >= 1000] or good
+    return max(good or ps, key=liq) if (good or ps) else None
 
 
-def _candles(net, pool, tf, agg):
+def _gt(url, params=None):
+    """GeckoTerminal GET with a short backoff on 429 (free tier is ~30 calls/min)."""
+    for i in range(2):
+        r = S.get(url, params=params, timeout=15)
+        if r.status_code != 429: return r
+        time.sleep(4)
+    return r
+
+
+def _side(net, pool, token):
+    """'base' or 'quote': which side of the GeckoTerminal pool is our token (GT and DexScreener can disagree)."""
     def f():
         try:
-            r = S.get(f"https://api.geckoterminal.com/api/v2/networks/{net}/pools/{pool}/ohlcv/{tf}", params={"aggregate": agg, "limit": 1000}, timeout=15)
+            r = _gt(f"https://api.geckoterminal.com/api/v2/networks/{net}/pools/{pool}")
+            rel = r.json()["data"]["relationships"]
+            for side in ("base", "quote"):
+                if rel[f"{side}_token"]["data"]["id"].split("_", 1)[1].lower() == token.lower(): return side
+        except Exception: return None
+        return None
+    return SIDES.get((net, pool, token.lower()), f)
+
+
+def _candles(net, pool, tf, agg, side="base"):
+    def f():
+        try:
+            r = _gt(f"https://api.geckoterminal.com/api/v2/networks/{net}/pools/{pool}/ohlcv/{tf}", {"aggregate": agg, "limit": 1000, "token": side})
             return r.json()["data"]["attributes"]["ohlcv_list"] if r.ok else None
         except Exception: return None
-    return OHLCV.get((net, pool, tf, agg), f)
+    return OHLCV.get((net, pool, tf, agg, side), f)
 
 
-def peak_after(token, chain, ts):
-    """(peak_usd, source) for the highest price since ts. GeckoTerminal OHLCV (free, keyless); falls back to the live price."""
+def peak_after(token, chain, ts, with_market=False):
+    """(peak_usd, source[, market_close_at_ts]). Peak = highest CLOSE after ts on the token's own side of its pool,
+    ignoring candles whose wick is >3x their close. Falls back to the live price (source 'now')."""
     p = _pool(token, chain); net = GT_NET.get((p or {}).get("chainId") or chain or "")
     if p and net and ts:
-        age = time.time() - ts
-        tf, agg, step = ("minute", 15, 900) if age < 9 * 86400 else ("hour", 1, 3600) if age < 40 * 86400 else ("day", 1, 86400)
-        cs = _candles(net, p["pairAddress"], tf, agg)
-        if cs:
-            hs = [c[2] for c in cs if c[0] + step > ts and c[2]]
-            if hs: return max(hs), "peak"
+        side = _side(net, p["pairAddress"], token)
+        if side:
+            age = time.time() - ts
+            tf, agg, step = ("minute", 15, 900) if age < 9 * 86400 else ("hour", 1, 3600) if age < 40 * 86400 else ("day", 1, 86400)
+            cs = sorted(_candles(net, p["pairAddress"], tf, agg, side) or [], key=lambda c: c[0])
+            after = [c for c in cs if c[0] >= ts - step and c[4]]
+            if after:
+                mk = after[0][4] if after[0][0] <= ts else None
+                after = [c for c in after if c[0] + step > ts and c[0] >= ts - step]
+                pk = max(c[4] for c in after)
+                return (pk, "peak", mk) if with_market else (pk, "peak")
     q = price(token, chain)
-    return (q[0], "now") if q else (None, None)
+    r = (q[0], "now") if q else (None, None)
+    return r + (None,) if with_market else r
+
+
+def fumble_ok(sold, peak, market):
+    """Sanity checks: no >1000x peaks, and the sell price must be within 5x of the market close at sell time."""
+    if not peak or peak <= sold or peak / sold > 1000: return False
+    if market and (sold / market > 5 or market / sold > 5): return False
+    return True
 
 
 def fumbles(cid, top=3):
@@ -491,11 +542,11 @@ def fumbles(cid, top=3):
     pairs = {(x["token"], x.get("chain")) for x in sells}; warm(list(pairs))
     out = []
     for x in sells:
-        ts = x.get("ts") or _ts_from(x["t"]); pk, src = peak_after(x["token"], x.get("chain"), ts)
-        if not pk: continue
+        ts = x.get("ts") or _ts_from(x["t"]); pk, src, mk = peak_after(x["token"], x.get("chain"), ts, True)
+        if not pk or src != "peak": continue
         exit_raw = x["px"] / (1 - fee()); qty = x["usd"] / x["px"]
         missed = qty * pk * (1 - fee()) - x["usd"]
-        if missed > 0.01 and pk > exit_raw:
+        if missed > 0.01 and fumble_ok(exit_raw, pk, mk):
             out.append({"symbol": x["symbol"], "sold": exit_raw, "peak": pk, "missed": missed, "x": pk / exit_raw, "src": src, "when": x["t"]})
     out.sort(key=lambda f: -f["missed"])
     return {"name": u.get("name"), "total": sum(f["missed"] for f in out), "count": len(out), "checked": len(sells), "top": out[:top]}
