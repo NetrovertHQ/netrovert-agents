@@ -22,9 +22,10 @@ A Telegram bot that looks at any token and says BUY, CAREFUL or SKIP with short 
 Public users never see the owner's wallet nicknames. Each watched wallet has a public label in config.json `public_labels` keyed by address (e.g. Robinhood whale #1, Solana trader #1/#2) with a description built from real hold time, trade rate and paper record. `/copy N` uses the number. Owner renames with `/publicname <nickname> <label>`. Test-* wallets are hidden.
 
 ## PnL cards
-`card.py` draws 1200x675 practice PnL images (trade and portfolio) labelled PRACTICE · NOT REAL MONEY, with the Gojo fox mascot from tg_bot/assets/: band.png for profit above +2%, sass.png for loss below -2%, sleep.png for flat (FLAT_PCT). Sent with `/pnl`, `/pnl SYMBOL` or `/pnl N`, and through the 🧾 Share PnL card button after sells and push closes.
+`card.py` draws 1200x675 practice PnL images (trade and portfolio) labelled PRACTICE · NOT REAL MONEY, with the Gojo fox mascot from tg_bot/assets/: band.png for profit above +2%, sass.png for loss below -2%, sleep.png for flat (FLAT_PCT). Sent with `/pnl`, `/pnl SYMBOL` or `/pnl N`, and through the 🧾 Share PnL card button after sells and push closes. **Layout B:** trade cards stack muted Dex market cap under Entry and Now/Exit when MC is available; without MC the price-only layout stays. Portfolio listing / `portfolio_card` unchanged. **Gojo mood presets:** under trade PnL images only (`/pnl SYM|N`, Share PnL `pc:h…`), inline buttons Auto/😎/😒/😴/😭/🎉 regenerate the same Layout B card via `pm:{ref}:{code}` + `editMessageMedia`; portfolio cards untouched. Forced mood is ephemeral (callback only).
 
 ## Running it
+Practice buy/sell fill rules live in the `practice-fill-guard` playbook — preserve those when changing practice fills.
 Folder `tools/copytrade/tg_bot/` (python3). Token is env TELEGRAM_BOT_TOKEN; never print it.
 - Start/stop: `./start.sh`, `./stop.sh` (logs in bot.log). After a box restart, run start.sh again; the hourly wallet check also restarts it if it's down.
 - Each Telegram call uses its own requests.post (a shared Session froze the reply workers after getUpdates timeouts). Replies run in a worker pool, and a watchdog restarts the bot if a reply is stuck too long.
