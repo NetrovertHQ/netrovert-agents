@@ -29,10 +29,12 @@ Nothing here posts or sends on its own. The agents research, draft, and track; N
 
 | Playbook | Purpose |
 |---|---|
+| [1-1-dm-voice](playbooks/1-1-dm-voice/SKILL.md) | Write 1:1 DMs and chat replies in second person to the recipient, not report style. |
 | [ats-check-before-applying](playbooks/ats-check-before-applying/SKILL.md) | Check a CV/application against the company's applicant tracking system before submitting. |
 | [bot-uptime-and-health-check](playbooks/bot-uptime-and-health-check/SKILL.md) | Keep a long-running bot alive: freeze-proofing, outside supervisor, and a full feature health check. |
 | [bounty-hackathon-breakdown](playbooks/bounty-hackathon-breakdown/SKILL.md) | Standard card for any bounty or hackathon: rules, prizes, route to winning, sponsor risk. |
 | [bounty-hunter-getting-started](playbooks/bounty-hunter-getting-started/SKILL.md) | First-run setup for the Bounties and Hackathons agent. |
+| [check-every-related-path](playbooks/check-every-related-path/SKILL.md) | When verifying a bot fix, exercise every related menu, command, and button path. |
 | [cold-dm-sweet-spot](playbooks/cold-dm-sweet-spot/SKILL.md) | Rules for short, human cold DMs with the ask up front. |
 | [community-foul-language-watch](playbooks/community-foul-language-watch/SKILL.md) | Flag abusive messages, count strikes, remove repeat offenders only with approval. |
 | [community-pulse-getting-started](playbooks/community-pulse-getting-started/SKILL.md) | Connect Discord, Telegram, and X group chats to Community Pulse. |
@@ -40,6 +42,7 @@ Nothing here posts or sends on its own. The agents research, draft, and track; N
 | [community-unanswered-questions](playbooks/community-unanswered-questions/SKILL.md) | Find member questions nobody answered. |
 | [copy-trading-getting-started](playbooks/copy-trading-getting-started/SKILL.md) | First-run setup for the Copy Trading agent. |
 | [daily-usage-cap](playbooks/daily-usage-cap/SKILL.md) | Pause all agents' routines for the day when the usage cap is hit. |
+| [double-check-before-changing](playbooks/double-check-before-changing/SKILL.md) | Prove the diagnosis and dry-run before changing live bot code or user data. |
 | [fomo-leaderboard-wallets](playbooks/fomo-leaderboard-wallets/SKILL.md) | Pull top traders and their wallets from the Fomo (fomo.family) leaderboard, read-only, for smart-money scoring. |
 | [founder-questions-lead-mining](playbooks/founder-questions-lead-mining/SKILL.md) | Mine questions people ask recently funded founders on X for content ideas and cold DMs (method by @thatGTMdude). |
 | [getting-started](playbooks/getting-started/SKILL.md) | First-run setup for the Job Seeking agent. |
@@ -50,6 +53,7 @@ Nothing here posts or sends on its own. The agents research, draft, and track; N
 | [nft-tracker-getting-started](playbooks/nft-tracker-getting-started/SKILL.md) | First-run setup for the NFT Tracker agent. |
 | [paper-trade-auditor](playbooks/paper-trade-auditor/SKILL.md) | Fake-trade a wallet or X caller on real prices before risking real money, with a pass/fail verdict. |
 | [pitch-funded-project](playbooks/pitch-funded-project/SKILL.md) | Pitch a freshly funded project for a paid content or community role. |
+| [practice-fill-guard](playbooks/practice-fill-guard/SKILL.md) | Preserve Netro Signal practice buy/sell fill guards (depth, thin pools, gapped SL). |
 | [reply-guy-getting-started](playbooks/reply-guy-getting-started/SKILL.md) | First-run setup for the Reply Guy agent. |
 | [reply-to-lead](playbooks/reply-to-lead/SKILL.md) | Draft a reply when a pitched lead responds, sends an offer, or asks for samples. |
 | [shared-contacts](playbooks/shared-contacts/SKILL.md) | Keep one shared contacts file in sync across all agents. |
